@@ -189,24 +189,24 @@ int main(void)
    ssd1306_begin(SSD1306_SWITCHCAPVCC, 0x3C);
    HAL_Delay(1000);
    display();
-   HAL_Delay(1000);
-   clearDisplay();
-   drawPixel(64, 32, WHITE);
-   display();
-   HAL_Delay(1000);
-
-   drawCircle(64, 32, 10, WHITE);
-   drawCircle(64, 32, 15, WHITE);
-   drawCircle(64, 32, 20, WHITE);
-   display();
-   HAL_Delay(1000);
-
-   fillCircle(64, 32, 10, WHITE);
-   display();
-   HAL_Delay(1000);
-
-   fillRoundRect(10, 10, 108, 48, 8,  WHITE);
-   display();
+//   HAL_Delay(1000);
+//   clearDisplay();
+//   drawPixel(64, 32, WHITE);
+//   display();
+//   HAL_Delay(1000);
+//
+//   drawCircle(64, 32, 10, WHITE);
+//   drawCircle(64, 32, 15, WHITE);
+//   drawCircle(64, 32, 20, WHITE);
+//   display();
+//   HAL_Delay(1000);
+//
+//   fillCircle(64, 32, 10, WHITE);
+//   display();
+//   HAL_Delay(1000);
+//
+//   fillRoundRect(10, 10, 108, 48, 8,  WHITE);
+//   display();
 
  //  clearDisplay();
  //  drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);
