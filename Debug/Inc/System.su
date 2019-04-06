@@ -1,0 +1,3 @@
+System.c:6:6:HAL_SYSTICK_Callback	0	static
+System.c:11:10:micros	8	static
+System.c:21:10:millis	0	static

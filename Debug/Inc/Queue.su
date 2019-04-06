@@ -1,0 +1,9 @@
+Queue.c:5:6:Init_Q	0	static
+Queue.c:22:6:Init_Buffer	0	static
+Queue.c:16:6:QueueCreate	0	static
+Queue.c:36:9:Q_full	0	static
+Queue.c:41:9:Q_empty	0	static
+Queue.c:47:9:write_Q	8	static
+Queue.c:56:9:read_Q	0	static
+Queue.c:68:10:QueueAvailable	8	static
+Queue.c:77:6:QueueFlush	0	static

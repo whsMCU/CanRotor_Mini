@@ -1,0 +1,12 @@
+ssd1306.c:74:6:ssd1306_command	32	static
+ssd1306.c:78:6:ssd1306_begin	16	static
+ssd1306.c:118:6:display	40	static
+ssd1306.c:138:6:clearDisplay	8	static
+ssd1306.c:143:6:drawPixel	8	static
+ssd1306.c:152:6:invertDisplay	0	static
+ssd1306.c:157:6:startscrollright	16	static
+ssd1306.c:168:6:startscrollleft	16	static
+ssd1306.c:179:6:startscrolldiagright	16	static
+ssd1306.c:192:6:startscrolldiagleft	16	static
+ssd1306.c:205:6:stopscroll	0	static
+ssd1306.c:209:6:dim	8	static

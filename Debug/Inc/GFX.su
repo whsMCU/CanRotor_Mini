@@ -1,0 +1,17 @@
+GFX.c:5:6:drawCircle	56	static
+GFX.c:38:6:drawCircleHelper	64	static
+GFX.c:107:6:drawLine	48	static
+GFX.c:140:6:drawFastVLine	16	static
+GFX.c:78:6:fillCircleHelper	72	static
+GFX.c:73:6:fillCircle	32	static
+GFX.c:145:6:drawFastHLine	16	static
+GFX.c:150:6:drawRect	24	static
+GFX.c:157:6:fillRect	24	static
+GFX.c:162:6:fillScreen	16	static
+GFX.c:166:6:drawRoundRect	64	static
+GFX.c:179:6:fillRoundRect	56	static
+GFX.c:188:6:drawTriangle	40	static
+GFX.c:194:6:fillTriangle	72	static
+GFX.c:263:6:drawBitmap	64	static
+GFX.c:276:9:width	0	static
+GFX.c:280:9:height	0	static
