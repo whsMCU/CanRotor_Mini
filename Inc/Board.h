@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __BOARD_H
+#define __BOARD_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
@@ -11,27 +12,28 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 /////////////////////////////////////////
-#include <I2C.h>
-#include <System.h>
-#include <Typedef.h>
-#include <EEPROM.h>
-#include <GPS.h>
-#include <Sensor.h>
-#include <IMU.h>
-#include <LED_control.h>
-#include <Radio.h>
-#include <PID.h>
-#include <Mixer.h>
-#include <PWM.h>
-#include <Serial.h>
-#include <Queue.h>
-#include <config.h>
+#include "I2C.h"
+#include "System.h"
+#include "Typedef.h"
+#include "EEPROM.h"
+#include "GPS.h"
+#include "Sensor.h"
+#include "IMU.h"
+#include "LED_control.h"
+#include "Radio.h"
+#include "PID.h"
+#include "Mixer.h"
+#include "PWM.h"
+#include "Serial.h"
+#include "Queue.h"
+#include "config.h"
 
-#include <ssd1306.h>
-#include <GFX.h>
-#include <fonts.h>
-//#include <Define.h>
+#include "ssd1306.h"
+#include "PHan_Lib.h"
+#include "GFX.h"
+#include "fonts.h"
 
 extern I2C_HandleTypeDef hi2c2;
 
@@ -171,4 +173,6 @@ extern rc RC_Raw;
 
 extern eeror_t Error;
 extern volatile uint32_t loop_timer;
+
+#endif
 

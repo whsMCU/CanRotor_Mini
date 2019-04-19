@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PID_H_
+#define PID_H_
 
 #define PID_SAMPLING_TIME   0.004f
 
@@ -38,4 +39,6 @@ typedef struct pidc_t {
 void PIDControlInit(pidc_t *pid);
 void Control(void);
 int constrain(int amt, int low, int high);
+
+#endif
 

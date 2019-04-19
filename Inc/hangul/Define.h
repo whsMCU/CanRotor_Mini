@@ -13,7 +13,6 @@
 #ifndef _DEFINE_H_
 #define _DEFINE_H_
 
-#include "board.h"
 
 typedef  unsigned int        U32;   
 typedef  short    int        U16; 
@@ -24,7 +23,7 @@ typedef  signed   char       S8;
 typedef           float      FLOAT;
 
 
-#define SET_BIT(BitPort, BitNum)      BitPort |= (1<<(BitNum))
+//#define SET_BIT(BitPort, BitNum)      BitPort |= (1<<(BitNum))
 #define CLR_BIT(BitPort, BitNum)      BitPort &= (~(1<<(BitNum)))     
 #define TGL_BIT(val,bit)            (val)   ^= (1<<bit)
 
@@ -92,10 +91,6 @@ typedef union               // 16비트 변수를 1바이트씩 나누어 저장
   S8  BitS8[2];
   S16 BitS16; 
 } WORD_OBJ;
-
-
-
-
 
 
 #endif

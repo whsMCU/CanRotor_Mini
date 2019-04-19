@@ -27,6 +27,7 @@
 #include "PHan_Lib.h"
 #include "PHanFont.h"
 #include "PHanFontEng.h"
+#include "Board.h"
 
 #include <stdio.h>
 #endif

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TYPEDEF_H_
+#define TYPEDEF_H_
+//#include "Board.h"
 
 enum param {
   ROLL = 0,
@@ -55,3 +57,5 @@ typedef struct eeror_t {
 #define CALIBRATING_GYRO_CYCLES             1000
 #define CALIBRATING_ACC_CYCLES              400
 #define CALIBRATING_BARO_CYCLES             200
+
+#endif

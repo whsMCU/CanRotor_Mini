@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RADIO_H_
+#define RADIO_H_
 
 typedef struct {
   uint32_t  capture_rise[8];
@@ -56,3 +57,5 @@ void mwArm(void);
 void mwDisarm(void);
 void RC_Init(void);
 void computeRC(void);
+
+#endif

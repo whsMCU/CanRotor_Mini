@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
 #define MOTOR_DC
 //#define MOTOR_ESC
@@ -20,3 +21,4 @@
 #define Telemetry
 #define SSD1306
 
+#endif

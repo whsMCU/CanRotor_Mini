@@ -40,7 +40,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "Board.h"
 //#include "stm32f1xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -91,6 +90,8 @@ extern uint8_t rx1_buffer[1];
 extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
+
+int test1 = 100;
 
 volatile uint32_t loop_timer = 0;
 /* USER CODE END PV */
@@ -201,14 +202,25 @@ int main(void)
 //   display();
 //   HAL_Delay(1000);
 //
+//   clearDisplay();
 //   fillCircle(64, 32, 10, WHITE);
 //   display();
 //   HAL_Delay(1000);
+
+//     drawPixel(64, 32, WHITE);
+//     display();
 //
-//   fillRoundRect(10, 10, 108, 48, 8,  WHITE);
+//   clearDisplay();
+//   fillRoundRect(10, 10, 100, 50, 5,  WHITE);
 //   display();
 
- //  clearDisplay();
+   clearDisplay();
+   oledprintf(0, 0, "Battery Voltage");
+   oledprintf(0, 16, "값은 %d V입니다.", test1);
+   display();
+
+
+   clearDisplay();
  //  drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);
  //  display();
  //

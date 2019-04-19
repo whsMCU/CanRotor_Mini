@@ -1,4 +1,7 @@
-#pragma once
+#ifndef SENSOR_H_
+#define SENSOR_H_
+
+//#include "Board.h"
 
 typedef struct {
   int16_t  accSmooth[3];
@@ -548,4 +551,6 @@ double getAltitude(double pressure, double seaLevelPressure);
 double getSeaLevel(double pressure, double altitude);
 uint16_t readRegister16(uint8_t reg);
 uint32_t readRegister24(uint8_t reg);
+
+#endif
 

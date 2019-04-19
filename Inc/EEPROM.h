@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __EEPROM_H
+#define __EEPROM_H
 
 typedef struct {
 	unsigned long errors;
@@ -32,3 +33,4 @@ void readChars(unsigned int address, char *data, int n);
 void read_2(unsigned int address, uint8_t *data, int offset, int n);
 void write_2(unsigned int address, uint8_t *data, int offset, int n);
 
+#endif

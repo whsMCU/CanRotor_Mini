@@ -1,4 +1,5 @@
-#pragma once
+#ifndef IMU_H_
+#define IMU_H_
 
 #define AHRSIMU_PI              3.141592653f            /*!< PI definition */
 #define AHRSIMU_RAD2DEG(x)      ((x) * 57.2957795f)     /*!< Radians to degrees converter */
@@ -60,3 +61,6 @@ void TM_AHRSIMU_UpdateIMU(TM_AHRSIMU_t* AHRSIMU, float gx, float gy, float gz, f
 #define TM_AHRSIMU_SetBeta(AHRSIMU, beta)       ((AHRSIMU)->_beta = (beta))
 
 void computeIMU(void);
+
+#endif
+

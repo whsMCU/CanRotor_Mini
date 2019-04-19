@@ -10,3 +10,5 @@ ssd1306.c:179:6:startscrolldiagright	16	static
 ssd1306.c:192:6:startscrolldiagleft	16	static
 ssd1306.c:205:6:stopscroll	0	static
 ssd1306.c:209:6:dim	8	static
+ssd1306.c:265:6:disHanFont	48	static
+ssd1306.c:223:6:oledprintf	328	static

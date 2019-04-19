@@ -1,4 +1,7 @@
-#pragma once
+#ifndef SERIAL_H_
+#define SERIAL_H_
+
+//#include "Board.h"
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 /* One byte is left free to distinguish empty from full. */
@@ -87,3 +90,5 @@ typedef enum serialState_t {
 
 #define MSP_DEBUGMSG             253   //out message         debug string buffer
 #define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
+
+#endif

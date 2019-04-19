@@ -7,7 +7,7 @@
 
 #ifndef GPS_H_
 #define GPS_H_
-#include <Board.h>
+//#include <Board.h>
 
 #define TD 9 //KOREA 시차 +9시간
 

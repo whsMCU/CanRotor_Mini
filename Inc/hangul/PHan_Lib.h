@@ -42,8 +42,7 @@ extern "C"
 #define PHAN_END_CODE     4
 
 
-typedef struct
-{
+typedef struct {
   U16 HanCode;
   U16 Size_Char;  // 글자 1개의 바이트수(한글:2 영문:1)
   U16 Code_Type;  // 한/영/특수 문자인지 감별 

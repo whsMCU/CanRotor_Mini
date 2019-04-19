@@ -1,4 +1,4 @@
-#include <Board.h>
+#include "Board.h"
 
 char Buf[128];
 
@@ -142,9 +142,14 @@ void tailSerialReply(void)
 void PrintData(uint8_t command)
 {
   Debug_TC++;
-  if(Debug_TC >= 12){
+  if(Debug_TC >= 12){ //12
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
+
+    oledprintf(0, 0, "학승이와 유진이");
+    oledprintf(0, 16, " %f도, %dPa입니다.", AHRSIMU.Roll, ms5611.realPressure);
+    oledprintf(0, 48, " %d Pa입니다.", ms5611.realPressure);
+    display();
 	switch(command)
 	{
 

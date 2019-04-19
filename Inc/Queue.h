@@ -1,4 +1,7 @@
-#pragma once
+#ifndef QUEUE_H_
+#define QUEUE_H_
+
+//#include "Board.h"
 
 #define MAX 128
 
@@ -21,3 +24,5 @@ uint8_t  write_Q(Queue_t *Q, char data);
 uint8_t  read_Q(Queue_t *Q);
 uint32_t QueueAvailable(Queue_t *Q);
 void     QueueFlush(Queue_t *Q);
+
+#endif

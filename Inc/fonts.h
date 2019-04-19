@@ -8,7 +8,7 @@
 #ifndef FONTS_H_
 #define FONTS_H_
 
-#include "board.h"
+#include <board.h>
 
 typedef struct {
 	const uint8_t FontWidth;

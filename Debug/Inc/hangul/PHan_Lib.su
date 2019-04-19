@@ -1,7 +1,7 @@
-PHan_Lib.c:44:5:PHan_CnvCodeWan2Johab	0	static
-PHan_Lib.c:138:6:PHan_HanFontLoad	24	static
-PHan_Lib.c:191:6:PHan_UniFontLoad	24	static
-PHan_Lib.c:250:6:PHan_EngFontLoad	0	static
-PHan_Lib.c:71:5:PHan_FontLoad	16	static
-PHan_Lib.c:271:6:PHan_MoveHanFont	0	static
-PHan_Lib.c:288:6:PHan_DisHanFont	40	static
+PHan_Lib.c:45:5:PHan_CnvCodeWan2Johab	0	static
+PHan_Lib.c:139:6:PHan_HanFontLoad	24	static
+PHan_Lib.c:192:6:PHan_UniFontLoad	24	static
+PHan_Lib.c:251:6:PHan_EngFontLoad	0	static
+PHan_Lib.c:72:5:PHan_FontLoad	16	static
+PHan_Lib.c:272:6:PHan_MoveHanFont	0	static
+PHan_Lib.c:289:6:PHan_DisHanFont	40	static
