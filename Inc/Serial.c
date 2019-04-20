@@ -146,9 +146,12 @@ void PrintData(uint8_t command)
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
 
-    oledprintf(0, 0, "학승이와 유진이");
-    oledprintf(0, 16, " %f도, %dPa입니다.", AHRSIMU.Roll, ms5611.realPressure);
-    oledprintf(0, 48, " %d Pa입니다.", ms5611.realPressure);
+    OLed_printf(0, 0, "CanRotor_Mini");
+    OLed_printf(0, 16, "ROLL : %2.1f 도", AHRSIMU.Roll);
+    OLed_printf(0, 32, "PITCH: %2.1f 도", AHRSIMU.Pitch);
+    OLed_printf(0, 48, "YAW  : %2.1f 도", AHRSIMU.Yaw);
+//    OLed_printf(0, 16, " %2.1f도, %dPa입니다.", AHRSIMU.Roll, ms5611.realPressure);
+//    OLed_printf(0, 48, " %d Pa입니다.", ms5611.realPressure);
     display();
 	switch(command)
 	{

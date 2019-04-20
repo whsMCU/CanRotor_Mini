@@ -307,3 +307,4 @@ void PHan_DisHanFont(PHAN_FONT_OBJ *FontPtr)
     //printf("%x\n",FontPtr->FontBuffer[i]);
   }
 }
+

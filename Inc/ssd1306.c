@@ -220,7 +220,7 @@ void dim(uint8_t dim) {
 	ssd1306_command(contrast);
 }
 
-void oledprintf(int x, int y,  const char *fmt, ...)
+void OLed_printf(int x, int y,  const char *fmt, ...)
 {
   int32_t ret = 0;
   va_list arg;
@@ -232,9 +232,11 @@ void oledprintf(int x, int y,  const char *fmt, ...)
   int i, x_Pre = x;
   PHAN_FONT_OBJ FontBuf;
 
+
+
   len = vsnprintf(print_buffer, 255, fmt, arg);
   va_end (arg);
-  HAL_UART_Transmit(&huart1, (uint8_t*)print_buffer, strlen(print_buffer), 1000);
+  //HAL_UART_Transmit(&huart1, (uint8_t*)print_buffer, strlen(print_buffer), 1000);
   for( i=0; i<len; i+=Size_Char )
   {
     PHan_FontLoad( &print_buffer[i], &FontBuf );

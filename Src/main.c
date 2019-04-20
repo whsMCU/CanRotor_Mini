@@ -91,8 +91,6 @@ extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
 
-int test1 = 100;
-
 volatile uint32_t loop_timer = 0;
 /* USER CODE END PV */
 
@@ -215,12 +213,9 @@ int main(void)
 //   display();
 
    clearDisplay();
-   oledprintf(0, 0, "Battery Voltage");
-   oledprintf(0, 16, "값은 %d V입니다.", test1);
-   display();
-
-
-   clearDisplay();
+//   OLed_printf(0, 0, "유진아 사랑해~!");
+//   OLed_printf(0, 16, "%d, %f, %d", 12, 3.14f, 7654);
+//   display();
  //  drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);
  //  display();
  //

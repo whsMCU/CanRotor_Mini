@@ -87,7 +87,7 @@ void startscrolldiagleft(uint8_t start, uint8_t stop);
 void stopscroll(void);
 void dim(uint8_t dim);
 
-void oledprintf(int x, int y,  const char *fmt, ...);
+void OLed_printf(int x, int y,  const char *fmt, ...);
 void disHanFont(int x, int y, PHAN_FONT_OBJ *FontPtr);
 
 
