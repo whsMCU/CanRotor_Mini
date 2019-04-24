@@ -1,18 +1,16 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-//#include "Board.h"
-
 #define MAX 128
 
 typedef struct queue {
   volatile uint8_t Ring_Buffer[MAX];
-	volatile uint8_t head;
-	volatile uint8_t tail;
-	volatile uint8_t size;
-	volatile uint8_t temp;
-	//uint8_t *p_buf;
-	volatile int cnt;
+  volatile uint8_t head;
+  volatile uint8_t tail;
+  volatile uint8_t size;
+  volatile uint8_t temp;
+//uint8_t *p_buf;
+  volatile int cnt;
 } Queue_t;
 
 void     Init_Q(Queue_t *Q);

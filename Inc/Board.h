@@ -14,29 +14,26 @@
 #include <stdbool.h>
 #include <stdarg.h>
 /////////////////////////////////////////
-#include "I2C.h"
-#include "System.h"
-#include "Typedef.h"
+#include "config.h"
 #include "EEPROM.h"
+#include "fonts.h"
+#include "GFX.h"
 #include "GPS.h"
-#include "Sensor.h"
+#include "I2C.h"
 #include "IMU.h"
 #include "LED_control.h"
-#include "Radio.h"
-#include "PID.h"
 #include "Mixer.h"
+#include "PID.h"
 #include "PWM.h"
-#include "Serial.h"
 #include "Queue.h"
-#include "config.h"
-
-#include "ssd1306.h"
-#include "PHan_Lib.h"
-#include "GFX.h"
-#include "fonts.h"
+#include "Radio.h"
+#include "Sensor.h"
+#include "Serial.h"
+//#include "ssd1306.h"
+#include "System.h"
+#include "Typedef.h"
 
 extern I2C_HandleTypeDef hi2c2;
-
 extern UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart1_rx;

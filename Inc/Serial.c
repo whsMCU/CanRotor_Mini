@@ -1,5 +1,5 @@
+//#include "Serial.h"
 #include "Board.h"
-
 char Buf[128];
 
 volatile unsigned char command=0;
@@ -145,14 +145,21 @@ void PrintData(uint8_t command)
   if(Debug_TC >= 12){ //12
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
-
+//    clearDisplay();
     OLed_printf(0, 0, "CanRotor_Mini");
-    OLed_printf(0, 16, "ROLL : %2.1f 도", AHRSIMU.Roll);
-    OLed_printf(0, 32, "PITCH: %2.1f 도", AHRSIMU.Pitch);
-    OLed_printf(0, 48, "YAW  : %2.1f 도", AHRSIMU.Yaw);
-//    OLed_printf(0, 16, " %2.1f도, %dPa입니다.", AHRSIMU.Roll, ms5611.realPressure);
-//    OLed_printf(0, 48, " %d Pa입니다.", ms5611.realPressure);
+    OLed_printf(0, 16, "ROLL : %2.1f 도", imu.AHRS[ROLL]);
+    OLed_printf(0, 32, "PITCH: %2.1f 도", imu.AHRS[PITCH]);
+    OLed_printf(0, 48, "YAW  : %2.1f 도", imu.AHRS[YAW]);
     display();
+
+//    for (int i=0; i<3; i++){
+//    	imu.AHRS_DP[i] = map(imu.AHRS[i], -90, 90, 1, 60);
+//    	fillRect(32*i, 64-imu.AHRS_DP[i], 10, imu.AHRS_DP[i], WHITE);
+//    }
+//
+//    fillRect(64-5 + (imu.AHRS_DP[1]-imu.AHRS_DP[2])/1, 4, 10, 4, WHITE);
+//    display();
+
 	switch(command)
 	{
 
@@ -332,14 +339,14 @@ void SerialCom(void) {
     		RC.rcCommand[ROLL]     = map(RC_Raw.rcCommand[ROLL], 0, 250, -20, 20)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
 		    RC.rcCommand[PITCH]    = map(RC_Raw.rcCommand[PITCH], 0, 250, -20, 20)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
 		    RC.rcCommand[YAW]      = map(RC_Raw.rcCommand[YAW], 0, 250, -100, 100); //0~250 left:0, right:250
-	      RC.rcCommand[THROTTLE] = map(RC_Raw.rcCommand[THROTTLE], 0, 250, 0, 1800);//0~250
-	      RC.rcCommand[AUX1] 	   =  RC_Raw.rcCommand[GEAR];
+	        RC.rcCommand[THROTTLE] = map(RC_Raw.rcCommand[THROTTLE], 0, 250, 0, 1800);//0~250
+	        RC.rcCommand[AUX1] 	   =  RC_Raw.rcCommand[GEAR];
 			 break;
 				
 		 case MSP_RC:
 			 	headSerialReply(10);
 			  for (i = 0; i < 5; i++)
-        serialize16(RC.rcCommand[i]);
+                serialize16(RC.rcCommand[i]);
 				tailSerialReply();
 			 break;
 				

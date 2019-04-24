@@ -1,8 +1,6 @@
 #ifndef SERIAL_H_
 #define SERIAL_H_
 
-//#include "Board.h"
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 /* One byte is left free to distinguish empty from full. */
 #define UART_MAX_CH     2

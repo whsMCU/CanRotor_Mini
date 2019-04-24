@@ -1,5 +1,5 @@
+//#include "Sensor.h"
 #include "Board.h"
-
 uint16_t calibratingA = 0;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
 uint16_t calibratingB = 200;      // baro calibration = get new ground pressure value
 uint16_t calibratingG = 0;

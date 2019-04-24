@@ -1,7 +1,6 @@
 #ifndef SSD1306_H_
 #define SSD1306_H_
 
-#include "board.h"
 #include "PHan_Lib.h"
 
 #define BLACK 	0

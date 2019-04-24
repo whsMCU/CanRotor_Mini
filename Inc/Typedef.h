@@ -1,6 +1,5 @@
 #ifndef TYPEDEF_H_
 #define TYPEDEF_H_
-//#include "Board.h"
 
 enum param {
   ROLL = 0,
@@ -14,8 +13,8 @@ enum param {
 
 typedef struct flags_t {
     uint8_t OK_TO_ARM;
-		uint8_t ARMED;
-		//////////////////////
+	uint8_t ARMED;
+	//////////////////////
     uint8_t Tuning_MODE;
     uint8_t Write_MODE;
 

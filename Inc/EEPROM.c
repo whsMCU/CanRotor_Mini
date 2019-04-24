@@ -4,6 +4,7 @@
  *  Created on: 2019. 1. 20.
  *      Author: WANG
  */
+//#include "EEPROM.h"
 #include "Board.h"
 
 eeprom_t eeprom;
@@ -18,7 +19,7 @@ void EEPROM_Test()
 	 write(12, 42);
 	 sprintf(Buf, "Read byte from address 12 ...\r\n");
 	 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
-   uint8_t b = read(12);
+     uint8_t b = read(12);
 	 sprintf(Buf, "read value : %d\r\n\n", b);
 	 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 

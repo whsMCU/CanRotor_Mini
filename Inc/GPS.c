@@ -5,8 +5,8 @@
  *      Author: WANG
  */
 
+//#include "GPS.h"
 #include "Board.h"
-
 gps_t GPS;
 
 void USART2_TX(unsigned char data){while(!(USART2->SR&0x40)); USART2->DR=data;}

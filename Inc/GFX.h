@@ -8,7 +8,7 @@
 #ifndef GFX_H_
 #define GFX_H_
 
-#include <board.h>
+#include "ssd1306.h"
 
 void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 void drawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);

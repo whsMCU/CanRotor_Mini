@@ -1,5 +1,5 @@
-#include "GFX.h"
-
+//#include "GFX.h"
+#include "Board.h"
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 
 void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {

@@ -1,8 +1,6 @@
 #ifndef SENSOR_H_
 #define SENSOR_H_
 
-//#include "Board.h"
-
 typedef struct {
   int16_t  accSmooth[3];
   int16_t  gyroData[3];
@@ -28,6 +26,7 @@ typedef struct {
   float gyroYaw;
 	
   float AHRS[3];
+  float AHRS_DP[3];
 	
 } imu_t;
 

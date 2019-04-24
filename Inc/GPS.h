@@ -7,7 +7,6 @@
 
 #ifndef GPS_H_
 #define GPS_H_
-//#include <Board.h>
 
 #define TD 9 //KOREA 시차 +9시간
 
@@ -55,6 +54,10 @@ typedef struct gps_t {
   uint32_t error;
 
 } gps_t;
+
+void USART2_TX(unsigned char data);
+
+void USART2_TX_str(char *str);
 
 void gps_Init(void);
 
