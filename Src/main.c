@@ -238,8 +238,8 @@ int main(void)
         gps_parse();
         #endif
 
-        //read_barometer();
-        Baro_update();
+        read_barometer();
+        //Baro_update();
         #ifdef DEVO7_Recive
         computeRC();
         #endif

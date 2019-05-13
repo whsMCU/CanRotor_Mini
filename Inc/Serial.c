@@ -142,7 +142,7 @@ void tailSerialReply(void)
 void PrintData(uint8_t command)
 {
   Debug_TC++;
-  if(Debug_TC >= 1){ //12
+  if(Debug_TC >= 12){ //12
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
 #ifdef SSD1306
@@ -231,8 +231,8 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-    sprintf(Buf, "MS5611 : %.2f C, %d Pa, %.2f m, LT : %d us\r\n",
-           ms5611.realTemperature, ms5611.realPressure, ms5611.absoluteAltitude, l_t);
+    sprintf(Buf, "MS5611 : %.2f C, %.2f Pa, %.2f cm, LT : %d us\r\n",
+            ms5611.R_T, ms5611.actual_pressure, ms5611.GroundAltitude, l_t);
     HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 		break;
 

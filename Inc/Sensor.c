@@ -820,6 +820,17 @@ void read_barometer(void)
       ms5611.average_temperature_mem_location++;
       if (ms5611.average_temperature_mem_location == 5)ms5611.average_temperature_mem_location = 0;
       ms5611.T = ms5611.raw_average_temperature_total / 5;                      //Calculate the avarage temperature of the last 5 measurements.
+
+      int32_t dT = ms5611.T - (uint32_t)ms5611.fc[4] * 256;
+      int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
+      ms5611.TEMP2 = 0;
+    if (TEMP < 2000)
+    {
+      ms5611.TEMP2 = (dT * dT) / (2 << 30);
+    }
+      TEMP = TEMP - ms5611.TEMP2;
+      ms5611.R_T = ((double)TEMP/100);
+
     }
     else {
       ms5611.rawPressure = readRegister24(MS5611_CMD_ADC_READ);
@@ -845,7 +856,7 @@ void read_barometer(void)
     ms5611.OFF = (int64_t)ms5611.fc[1] * 65536 + ((int64_t)ms5611.dT * (int64_t)ms5611.fc[3]) / 128;
     ms5611.SENS = (int64_t)ms5611.fc[0] * 32768 + ((int64_t)ms5611.dT * (int64_t)ms5611.fc[2]) / 256;
 
-    int32_t TEMP = 2000 + ((int64_t) ms5611.dT * ms5611.fc[5]) / 8388608;
+    int64_t TEMP = 2000 + ((int64_t) ms5611.dT * ms5611.fc[5]) / 8388608;
     ms5611.OFF2 = 0;
     ms5611.SENS2 = 0;
 

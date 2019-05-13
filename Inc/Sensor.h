@@ -492,6 +492,7 @@ typedef struct {
   uint32_t raw_temperature_rotating_memory[6];
   uint32_t raw_average_temperature_total;
   uint32_t T;
+  double R_T;
 
   uint32_t rawPressure;
   uint8_t pressure_rotating_mem_location;
