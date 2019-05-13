@@ -18,7 +18,7 @@
 //#define GPS_Recive
 //#define DEVO7_Recive
 //#define BLE_Recive
-#define Telemetry
+//#define Telemetry
 #define SSD1306
 
 #endif

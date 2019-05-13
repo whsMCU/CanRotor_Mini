@@ -142,10 +142,11 @@ void tailSerialReply(void)
 void PrintData(uint8_t command)
 {
   Debug_TC++;
-  if(Debug_TC >= 12){ //12
+  if(Debug_TC >= 1){ //12
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
-//    clearDisplay();
+#ifdef SSD1306
+    //clearDisplay();
     OLed_printf(0, 0, "CanRotor_Mini");
     OLed_printf(0, 16, "ROLL : %2.1f 도", imu.AHRS[ROLL]);
     OLed_printf(0, 32, "PITCH: %2.1f 도", imu.AHRS[PITCH]);
@@ -159,6 +160,7 @@ void PrintData(uint8_t command)
 //
 //    fillRect(64-5 + (imu.AHRS_DP[1]-imu.AHRS_DP[2])/1, 4, 10, 4, WHITE);
 //    display();
+#endif
 
 	switch(command)
 	{
@@ -196,12 +198,12 @@ void PrintData(uint8_t command)
 		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
-//		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d) \r\n",
-//	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE);
+		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d) \r\n",
+	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
-    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
-            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
+//    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
+//            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
     //sprintf(Buf,"Hour: %d, minute : %d, second : %d, milliseconds : %d\n", GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds);
 		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 	//HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
@@ -229,8 +231,8 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-    sprintf(Buf, "MS5611 : %.2f C, %d Pa, %.2f m\r\n\r\n",
-           ms5611.realTemperature, ms5611.realPressure, ms5611.absoluteAltitude);
+    sprintf(Buf, "MS5611 : %.2f C, %d Pa, %.2f m, LT : %d us\r\n",
+           ms5611.realTemperature, ms5611.realPressure, ms5611.absoluteAltitude, l_t);
     HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 		break;
 

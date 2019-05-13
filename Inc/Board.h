@@ -61,6 +61,8 @@ extern TM_AHRSIMU_t AHRSIMU;
 extern rc RC;
 extern rc RC_Raw;
 
+extern volatile uint32_t l_t;
+
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846f

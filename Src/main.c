@@ -91,7 +91,7 @@ extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
 
-volatile uint32_t loop_timer = 0;
+volatile uint32_t loop_timer=0, l_t = 0;
 
 /* USER CODE END PV */
 
@@ -249,7 +249,8 @@ int main(void)
         PwmWriteMotor();
 
         //PrintData(3);   //GPS Data
-        PrintData(5);   //All Data Out Put
+        PrintData(10);
+     //   PrintData(5);   //All Data Out Put
        //PrintData(6);   //PID Tune
 
       HAL_ADC_Start(&hadc1);
@@ -266,6 +267,7 @@ int main(void)
       SendTelemetry();
       #endif
       if (micros() - loop_timer > 4050)Error.error = 4;                                      //Output an error if the loop time exceeds 4050us.
+      l_t = micros() - loop_timer;
       while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
       loop_timer = micros();
     /* USER CODE BEGIN 3 */

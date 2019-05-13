@@ -968,8 +968,8 @@ int getEstimatedAltitude(void)
   BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
   BaroAlt_tmp -= baroGroundAltitude;
   ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.8 + (float)BaroAlt_tmp * (1.0f - 0.8)); // additional LPF to reduce baro noise
-  sprintf(Buf, "%ld pa, %ld cm \n ", baroPressureSum / (21 - 1), ms5611.BaroAlt);
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+//  sprintf(Buf, "%ld pa, %ld cm \n ", baroPressureSum / (21 - 1), ms5611.BaroAlt);
+//  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
   return 1;
 }

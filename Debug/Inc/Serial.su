@@ -13,7 +13,7 @@ Serial.c:116:6:headSerialResponse	16	static
 Serial.c:126:6:headSerialReply	0	static
 Serial.c:131:6:headSerialError	0	static
 Serial.c:136:6:tailSerialReply	0	static
-Serial.c:142:6:PrintData	120	static
-Serial.c:316:7:evaluateCommand	32	static
-Serial.c:262:6:SerialCom	48	static
-Serial.c:418:6:SendTelemetry	8	static
+Serial.c:142:6:PrintData	96	static
+Serial.c:318:7:evaluateCommand	32	static
+Serial.c:264:6:SerialCom	48	static
+Serial.c:420:6:SendTelemetry	8	static
