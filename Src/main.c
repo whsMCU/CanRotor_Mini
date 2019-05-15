@@ -249,7 +249,7 @@ int main(void)
         PwmWriteMotor();
 
         //PrintData(3);   //GPS Data
-     //   PrintData(10);
+        PrintData(10);
      //   PrintData(5);   //All Data Out Put
        //PrintData(6);   //PID Tune
 

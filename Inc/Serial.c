@@ -231,8 +231,8 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-    sprintf(Buf, "%d, %d, %d, %d\r\n ", l_t, ms5611.T, ms5611.P, ms5611.BaroAlt);
-    HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		sprintf(Buf, "Data : %d, %d, %d, %d \r\n ", l_t, ms5611.realTemperature, (uint32_t)ms5611.realPressure, ms5611.BaroAlt);
+		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
 		break;
 

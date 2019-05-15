@@ -488,32 +488,14 @@ typedef struct {
   uint8_t temperature_counter;
 
   uint32_t rawTemp;
-  uint8_t average_temperature_mem_location;
-  uint32_t raw_temperature_rotating_memory[6];
-  uint32_t raw_average_temperature_total;
-  uint32_t T;
-  double R_T;
+  uint32_t realTemperature;
 
   uint32_t rawPressure;
-  uint8_t pressure_rotating_mem_location;
-  int32_t pressure_total_avarage;
-  int32_t pressure_rotating_mem[50];
-  int64_t P;
 
-  float actual_pressure;
-  float actual_pressure_slow;
-  float actual_pressure_fast;
-  float actual_pressure_diff;
+  int64_t realPressure;
 
-
-  double seaLevelPressure;
-
-  double realTemperature;
-  int32_t realPressure;
   int32_t BaroAlt;
 
-  float absoluteAltitude;
-  float GroundAltitude;
 
 } ms5611_t;
 
@@ -537,7 +519,6 @@ void MPU9250SelfTest(float * destination);
 void magcalMPU9250(float * dest1, float * dest2);
 
 void MS5611_Init(ms5611_osr_t osr);
-void read_barometer(void);
 
 void Baro_Common(void);
 uint8_t Baro_update(void);

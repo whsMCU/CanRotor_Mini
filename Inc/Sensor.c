@@ -760,8 +760,6 @@ void MS5611_Init(ms5611_osr_t osr)
 	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 
   I2C_Write(MS5611_ADDRESS, MS5611_CMD_RESET, 1);
-  ms5611.compensation = 1;
-  ms5611.seaLevelPressure = 101325;
   // Set oversampling value
   switch (osr)
   {
@@ -789,117 +787,9 @@ void MS5611_Init(ms5611_osr_t osr)
     ms5611.fc[offset] = readRegister16(MS5611_CMD_READ_PROM + (offset * 2));
   }
 
-  //ms5611.referencePressure = readPressure(ms5611.compensation);
   sprintf(Buf, "Oversampling: %d\r\n", ms5611.uosr);
   HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 
-//  //The MS5611 needs a few readings to stabilize.
-//  for (uint8_t start = 0; start < 255; start++) {                       //This loop runs 100 times.
-//    read_barometer();                                           //Read and calculate the barometer data.
-//    HAL_Delay(4);                                               //The main program loop also runs 250Hz (4ms per loop).
-//  }
-//
-//  ms5611.actual_pressure = 0;                                          //Reset the pressure calculations.
-}
-
-void read_barometer(void)
-{
-  ms5611.barometer_counter ++;
-
-  //Every time this function is called the barometer_counter variable is incremented. This way a specific action
-  //is executed at the correct moment. This is needed because requesting data from the MS5611 takes around 9ms to complete.
-
-  if (ms5611.barometer_counter == 1) {                                                 //When the barometer_counter variable is 1.
-    if (ms5611.temperature_counter == 0) {                                             //And the temperature counter is 0.
-      //Get temperature data from MS-5611
-      ms5611.rawTemp = readRegister24(MS5611_CMD_ADC_READ);
-      // Store the temperature in a 5 location rotating memory to prevent temperature spikes.
-      ms5611.raw_average_temperature_total -= ms5611.raw_temperature_rotating_memory[ms5611.average_temperature_mem_location];
-      ms5611.raw_temperature_rotating_memory[ms5611.average_temperature_mem_location] = ms5611.rawTemp;
-      ms5611.raw_average_temperature_total += ms5611.raw_temperature_rotating_memory[ms5611.average_temperature_mem_location];
-      ms5611.average_temperature_mem_location++;
-      if (ms5611.average_temperature_mem_location == 5)ms5611.average_temperature_mem_location = 0;
-      ms5611.T = ms5611.raw_average_temperature_total / 5;                      //Calculate the avarage temperature of the last 5 measurements.
-
-      int32_t dT = ms5611.T - (uint32_t)ms5611.fc[4] * 256;
-      int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
-      ms5611.TEMP2 = 0;
-    if (TEMP < 2000)
-    {
-      ms5611.TEMP2 = (dT * dT) / (2 << 30);
-    }
-      TEMP = TEMP - ms5611.TEMP2;
-      ms5611.R_T = ((double)TEMP/100);
-
-    }
-    else {
-      ms5611.rawPressure = readRegister24(MS5611_CMD_ADC_READ);
-    }
-
-    ms5611.temperature_counter ++;                                                     //Increase the temperature_counter variable.
-    if (ms5611.temperature_counter == 20) {                                            //When the temperature counter equals 20.
-      ms5611.temperature_counter = 0;                                                  //Reset the temperature_counter variable.
-      //Request temperature data
-      I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D2 + ms5611.uosr, 1);
-    }
-    else {                                                                      //If the temperature_counter variable does not equal 20.
-      //Request pressure data
-      I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D1 + ms5611.uosr, 1);
-    }
-  }
-  if (ms5611.barometer_counter == 2) {                                                 //If the barometer_counter variable equals 2.
-    //Calculate pressure as explained in the datasheet of the MS-5611.
-    ms5611.dT = ms5611.fc[4];
-    ms5611.dT <<= 8;
-    ms5611.dT *= -1;
-    ms5611.dT += ms5611.T;
-    ms5611.OFF = (int64_t)ms5611.fc[1] * 65536 + ((int64_t)ms5611.dT * (int64_t)ms5611.fc[3]) / 128;
-    ms5611.SENS = (int64_t)ms5611.fc[0] * 32768 + ((int64_t)ms5611.dT * (int64_t)ms5611.fc[2]) / 256;
-
-    int64_t TEMP = 2000 + ((int64_t) ms5611.dT * ms5611.fc[5]) / 8388608;
-    ms5611.OFF2 = 0;
-    ms5611.SENS2 = 0;
-
-    if(TEMP < 2000){
-      ms5611.OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 2;
-      ms5611.SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 4;
-    }
-
-    if (TEMP < -1500){
-      ms5611.OFF2 = ms5611.OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
-      ms5611.SENS2 = ms5611.SENS2 + 11 * ((TEMP + 1500) * (TEMP + 1500)) / 2;
-    }
-
-    ms5611.OFF = ms5611.OFF - ms5611.OFF2;
-    ms5611.SENS = ms5611.SENS - ms5611.SENS2;
-
-    ms5611.P = ((ms5611.rawPressure * ms5611.SENS) / 2097152 - ms5611.OFF) / 32768;
-    //To get a smoother pressure value we will use a 20 location rotating memory.
-    ms5611.pressure_total_avarage -= ms5611.pressure_rotating_mem[ms5611.pressure_rotating_mem_location];                          //Subtract the current memory position to make room for the new value.
-    ms5611.pressure_rotating_mem[ms5611.pressure_rotating_mem_location] = ms5611.P;                                                //Calculate the new change between the actual pressure and the previous measurement.
-    ms5611.pressure_total_avarage += ms5611.pressure_rotating_mem[ms5611.pressure_rotating_mem_location];                          //Add the new value to the long term avarage value.
-    ms5611.pressure_rotating_mem_location++;                                                                         //Increase the rotating memory location.
-    if (ms5611.pressure_rotating_mem_location == 20)ms5611.pressure_rotating_mem_location = 0;                              //Start at 0 when the memory location 20 is reached.
-    ms5611.actual_pressure_fast = (float)ms5611.pressure_total_avarage / 20.0;                                              //Calculate the average pressure of the last 20 pressure readings.
-
-    //To get better results we will use a complementary fillter that can be adjusted by the fast average.
-    ms5611.actual_pressure_slow = ms5611.actual_pressure_slow * (float)0.985 + ms5611.actual_pressure_fast * (float)0.015;
-    ms5611.actual_pressure_diff = ms5611.actual_pressure_slow - ms5611.actual_pressure_fast;                                       //Calculate the difference between the fast and the slow avarage value.
-    if (ms5611.actual_pressure_diff > 8)ms5611.actual_pressure_diff = 8;                                                    //If the difference is larger then 8 limit the difference to 8.
-    if (ms5611.actual_pressure_diff < -8)ms5611.actual_pressure_diff = -8;                                                  //If the difference is smaller then -8 limit the difference to -8.
-    //If the difference is larger then 1 or smaller then -1 the slow average is adjuste based on the error between the fast and slow average.
-    if (ms5611.actual_pressure_diff > 1 || ms5611.actual_pressure_diff < -1)ms5611.actual_pressure_slow -= ms5611.actual_pressure_diff / 6.0;
-    ms5611.actual_pressure = ms5611.actual_pressure_slow;                                                                   //The actual_pressure is used in the program for altitude calculations.
-    ms5611.GroundAltitude = lrintf((1.0f - powf((ms5611.actual_pressure) / 101325.0f, 0.190295f)) * 4433000.0f);
-  }
-
-  if (ms5611.barometer_counter == 3) {                                                                               //When the barometer counter is 3
-
-    ms5611.barometer_counter = 0;                                                                                    //Set the barometer counter to 0 for the next measurements.
-    //In the following part a rotating buffer is used to calculate the long term change between the various pressure measurements.
-    //This total value can be used to detect the direction (up/down) and speed of the quadcopter and functions as the D-controller of the total PID-controller.
-
-  }
 }
 
 void Baro_Common(void)
@@ -909,7 +799,7 @@ void Baro_Common(void)
 
   uint8_t indexplus1 = (baroHistIdx + 1);
   if (indexplus1 == BARO_TAB_SIZE_MAX) indexplus1 = 0;
-  baroHistTab[baroHistIdx] = ms5611.P;
+  baroHistTab[baroHistIdx] = ms5611.realPressure;
   baroPressureSum += baroHistTab[baroHistIdx];
   baroPressureSum -= baroHistTab[indexplus1];
   baroHistIdx = indexplus1;
@@ -979,7 +869,7 @@ int getEstimatedAltitude(void)
 //
 //      calibratingB--;
     logBaroGroundPressureSum = log(baroPressureSum);
-    baroGroundTemperatureScale = ((int32_t)ms5611.T + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
+    baroGroundTemperatureScale = ((int32_t)ms5611.realTemperature + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
     calibratingB--;
   }
 
@@ -987,8 +877,6 @@ int getEstimatedAltitude(void)
   // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
   ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
 
-  sprintf(Buf, "ms5611.BaroAlt: %d\r\n", ms5611.BaroAlt);
-  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 //  BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
 //  BaroAlt_tmp -= baroGroundAltitude;
 //  ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.8 + (float)BaroAlt_tmp * (1.0f - 0.8)); // additional LPF to reduce baro noise
@@ -1025,7 +913,7 @@ void MS561101BA_Calculate(void){
   int64_t SENS = (int64_t)ms5611.fc[0] * 32768 + (int64_t)ms5611.fc[2] * dT / 256;
 
   int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
-  ms5611.T = TEMP;
+  ms5611.realTemperature = TEMP;
 
   ms5611.OFF2 = 0;
   ms5611.SENS2 = 0;
@@ -1045,81 +933,7 @@ void MS561101BA_Calculate(void){
   OFF = OFF - ms5611.OFF2;
   SENS = SENS - ms5611.SENS2;
 
-  ms5611.P = (D1 * SENS / 2097152 - OFF) / 32768;
-//  sprintf(Buf, "ms5611.P: %d\r\n", ms5611.P);
-//  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
-}
-
-int32_t readPressure(bool compensation)
-{
-    uint32_t D1 = ms5611.rawPressure;
-
-    uint32_t D2 = ms5611.rawTemp;
-    int32_t dT = D2 - (uint32_t)ms5611.fc[4] * 256;
-
-    int64_t OFF = (int64_t)ms5611.fc[1] * 65536 + (int64_t)ms5611.fc[3] * dT / 128;
-    int64_t SENS = (int64_t)ms5611.fc[0] * 32768 + (int64_t)ms5611.fc[2] * dT / 256;
-
-    if (compensation)
-    {
-      int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
-
-      ms5611.OFF2 = 0;
-      ms5611.SENS2 = 0;
-
-    if (TEMP < 2000)
-    {
-      ms5611.OFF2 = (5 * ((TEMP - 2000) * (TEMP - 2000))) / 2;
-      ms5611.SENS2 = (5 * ((TEMP - 2000) * (TEMP - 2000))) / 4;
-    }
-
-    if (TEMP < -1500)
-    {
-      ms5611.OFF2 = ms5611.OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
-      ms5611.SENS2 = ms5611.SENS2 + 11 * ((TEMP + 1500) * (TEMP + 1500)) / 2;
-    }
-
-    OFF = OFF - ms5611.OFF2;
-    SENS = SENS - ms5611.SENS2;
-    }
-
-    uint32_t P = (D1 * SENS / 2097152 - OFF) / 32768;
-
-    return P;
-}
-
-double readTemperature(bool compensation)
-{
-    uint32_t D2 = readRawTemperature();
-    int32_t dT = D2 - (uint32_t)ms5611.fc[4] * 256;
-
-    int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
-
-    ms5611.TEMP2 = 0;
-
-    if (compensation)
-    {
-  if (TEMP < 2000)
-  {
-    ms5611.TEMP2 = (dT * dT) / (2 << 30);
-  }
-    }
-
-    TEMP = TEMP - ms5611.TEMP2;
-
-    return ((double)TEMP/100);
-}
-
-// Calculate altitude from Pressure & Sea level pressure
-double getAltitude(double pressure, double seaLevelPressure)
-{
-    return (44330.0f * (1.0f - pow((double)pressure / (double)seaLevelPressure, 0.1902949f)));
-}
-
-// Calculate sea level from Pressure given on specific altitude
-double getSeaLevel(double pressure, double altitude)
-{
-    return ((double)pressure / pow(1.0f - ((double)altitude / 44330.0f), 5.255f));
+  ms5611.realPressure = (D1 * SENS / 2097152 - OFF) / 32768;
 }
 
 // Read 16-bit from register (oops MSB, LSB)

@@ -62,6 +62,7 @@ extern rc RC;
 extern rc RC_Raw;
 
 extern volatile uint32_t l_t;
+extern uint32_t baroPressureSum;
 
 
 #ifndef M_PI
