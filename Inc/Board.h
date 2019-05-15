@@ -60,6 +60,7 @@ extern uint16_t calibratingA;
 extern TM_AHRSIMU_t AHRSIMU;
 extern rc RC;
 extern rc RC_Raw;
+extern alt_t alt;
 
 extern volatile uint32_t l_t;
 extern uint32_t baroPressureSum;

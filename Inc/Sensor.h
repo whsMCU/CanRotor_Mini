@@ -480,24 +480,21 @@ typedef struct {
   int64_t OFF, SENS;
   int64_t OFF1, SENS1;
   int64_t OFF2, SENS2;
-  bool compensation;
-
-  double referencePressure;
-
-  uint8_t barometer_counter;
-  uint8_t temperature_counter;
 
   uint32_t rawTemp;
   uint32_t realTemperature;
 
   uint32_t rawPressure;
-
   int64_t realPressure;
 
   int32_t BaroAlt;
 
-
 } ms5611_t;
+
+typedef struct {
+  int32_t  EstAlt;             // in cm
+  int16_t  vario;              // variometer in cm/s
+} alt_t;
 
 void getMres(void);
 void getGres(void);

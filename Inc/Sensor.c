@@ -754,6 +754,8 @@ void magcalMPU9250(float * dest1, float * dest2)
 
  }
 
+alt_t alt;
+
 void MS5611_Init(ms5611_osr_t osr)
 {
 	sprintf(Buf, "Initialize MS-5611 Sensor\r\n");
@@ -850,10 +852,6 @@ uint8_t Baro_update(void)
 
 int getEstimatedAltitude(void)
 {
-//  int32_t BaroAlt_tmp;
-//  static int32_t baroGroundAltitude = 0;
-//  static int32_t baroGroundPressure = 0;
-
   static float baroGroundTemperatureScale,logBaroGroundPressureSum;
   static uint16_t previousT;
   uint16_t currentT = micros();
@@ -863,11 +861,7 @@ int getEstimatedAltitude(void)
   if (dTime < 25000) return 0;
   previousT = currentT;
   if (calibratingB > 0) {
- //     baroGroundPressure -= baroGroundPressure / 8;
-//      baroGroundPressure += baroPressureSum / (21 - 1);
-//      baroGroundAltitude = (1.0f - powf((baroGroundPressure / 8) / 101325.0f, 0.190295f)) * 4433000.0f;
-//
-//      calibratingB--;
+
     logBaroGroundPressureSum = log(baroPressureSum);
     baroGroundTemperatureScale = ((int32_t)ms5611.realTemperature + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
     calibratingB--;
@@ -877,11 +871,7 @@ int getEstimatedAltitude(void)
   // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
   ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
 
-//  BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
-//  BaroAlt_tmp -= baroGroundAltitude;
-//  ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.8 + (float)BaroAlt_tmp * (1.0f - 0.8)); // additional LPF to reduce baro noise
-//  sprintf(Buf, "%ld pa, %ld cm \n ", baroPressureSum / (21 - 1), ms5611.BaroAlt);
-//  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+  alt.EstAlt = (alt.EstAlt * 6 + ms5611.BaroAlt ) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
 
   return 1;
 }
