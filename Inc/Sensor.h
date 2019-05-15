@@ -459,7 +459,7 @@ enum M_MODE {
 #define MS5611_CMD_CONV_D2            (0x50)
 #define MS5611_CMD_READ_PROM          (0xA2)
 
-#define BARO_TAB_SIZE_MAX 48
+#define BARO_TAB_SIZE_MAX 21
 
 
 typedef enum
@@ -540,11 +540,12 @@ void MS5611_Init(ms5611_osr_t osr);
 void read_barometer(void);
 
 void Baro_Common(void);
-int Baro_update(void);
+uint8_t Baro_update(void);
 int getEstimatedAltitude(void);
 
 uint32_t readRawTemperature(void);
 uint32_t readRawPressure(void);
+void MS561101BA_Calculate(void);
 double readTemperature(bool compensation);
 int32_t readPressure(bool compensation);
 double getAltitude(double pressure, double seaLevelPressure);

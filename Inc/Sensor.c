@@ -793,13 +793,13 @@ void MS5611_Init(ms5611_osr_t osr)
   sprintf(Buf, "Oversampling: %d\r\n", ms5611.uosr);
   HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 
-  //The MS5611 needs a few readings to stabilize.
-  for (uint8_t start = 0; start < 255; start++) {                       //This loop runs 100 times.
-    read_barometer();                                           //Read and calculate the barometer data.
-    HAL_Delay(4);                                               //The main program loop also runs 250Hz (4ms per loop).
-  }
-
-  ms5611.actual_pressure = 0;                                          //Reset the pressure calculations.
+//  //The MS5611 needs a few readings to stabilize.
+//  for (uint8_t start = 0; start < 255; start++) {                       //This loop runs 100 times.
+//    read_barometer();                                           //Read and calculate the barometer data.
+//    HAL_Delay(4);                                               //The main program loop also runs 250Hz (4ms per loop).
+//  }
+//
+//  ms5611.actual_pressure = 0;                                          //Reset the pressure calculations.
 }
 
 void read_barometer(void)
@@ -906,17 +906,16 @@ void Baro_Common(void)
 {
   static int32_t baroHistTab[BARO_TAB_SIZE_MAX];
   static int baroHistIdx = 0;
-  int indexplus1;
-   indexplus1 = (baroHistIdx + 1);
-  if (indexplus1 == 21)
-      indexplus1 = 0;
-  baroHistTab[baroHistIdx] = ms5611.realPressure;
+
+  uint8_t indexplus1 = (baroHistIdx + 1);
+  if (indexplus1 == BARO_TAB_SIZE_MAX) indexplus1 = 0;
+  baroHistTab[baroHistIdx] = ms5611.P;
   baroPressureSum += baroHistTab[baroHistIdx];
   baroPressureSum -= baroHistTab[indexplus1];
   baroHistIdx = indexplus1;
 }
 
-int Baro_update(void)
+uint8_t Baro_update(void)
 {
     static uint32_t baroDeadline = 0;
     static int state = 0;
@@ -925,29 +924,26 @@ int Baro_update(void)
     switch (taskOrder){
     case 0:
        taskOrder++;
-
-       if ((int32_t)(loop_timer - baroDeadline) < 0)
-        return 0;
-
+       if(state >= 2){
+         state = 0;
+         MS561101BA_Calculate();
+         return 1;
+       }
+       if ((int32_t)(loop_timer - baroDeadline) < 0) return 0;
        baroDeadline = loop_timer;
-
-       if (state) {
+       if (state == 0) {
+         Baro_Common();
+         ms5611.rawTemp = readRegister24(MS5611_CMD_ADC_READ);
+        //Request pressure data
+         I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D1 + ms5611.uosr, 1);
+         baroDeadline +=10000;
+       } else {
          ms5611.rawPressure = readRegister24(MS5611_CMD_ADC_READ);
         //Request temperature data
-        I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D2 + ms5611.uosr, 1);
-        baroDeadline += 10000;
-        ms5611.realPressure = readPressure(1);
-        state = 0;
-        return 2;
-       } else {
-        ms5611.rawTemp = readRegister24(MS5611_CMD_ADC_READ);
-        //Request pressure data
-        I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D1 + ms5611.uosr, 1);
-        Baro_Common();
-        state = 1;
-        baroDeadline += 10000;
-        return 1;
+         I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D2 + ms5611.uosr, 1);
+         baroDeadline +=10000;
        }
+       state ++;
        break;
 
     case 1:
@@ -964,21 +960,38 @@ int Baro_update(void)
 
 int getEstimatedAltitude(void)
 {
-  int32_t BaroAlt_tmp;
-  static int32_t baroGroundAltitude = 0;
-  static int32_t baroGroundPressure = 0;
+//  int32_t BaroAlt_tmp;
+//  static int32_t baroGroundAltitude = 0;
+//  static int32_t baroGroundPressure = 0;
 
+  static float baroGroundTemperatureScale,logBaroGroundPressureSum;
+  static uint16_t previousT;
+  uint16_t currentT = micros();
+  uint16_t dTime;
+
+  dTime = currentT - previousT;
+  if (dTime < 25000) return 0;
+  previousT = currentT;
   if (calibratingB > 0) {
-      baroGroundPressure -= baroGroundPressure / 8;
-      baroGroundPressure += baroPressureSum / (21 - 1);
-      baroGroundAltitude = (1.0f - powf((baroGroundPressure / 8) / 101325.0f, 0.190295f)) * 4433000.0f;
-
-      calibratingB--;
+ //     baroGroundPressure -= baroGroundPressure / 8;
+//      baroGroundPressure += baroPressureSum / (21 - 1);
+//      baroGroundAltitude = (1.0f - powf((baroGroundPressure / 8) / 101325.0f, 0.190295f)) * 4433000.0f;
+//
+//      calibratingB--;
+    logBaroGroundPressureSum = log(baroPressureSum);
+    baroGroundTemperatureScale = ((int32_t)ms5611.T + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
+    calibratingB--;
   }
 
-  BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
-  BaroAlt_tmp -= baroGroundAltitude;
-  ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.8 + (float)BaroAlt_tmp * (1.0f - 0.8)); // additional LPF to reduce baro noise
+  // baroGroundPressureSum is not supposed to be 0 here
+  // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
+  ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
+
+  sprintf(Buf, "ms5611.BaroAlt: %d\r\n", ms5611.BaroAlt);
+  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//  BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
+//  BaroAlt_tmp -= baroGroundAltitude;
+//  ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.8 + (float)BaroAlt_tmp * (1.0f - 0.8)); // additional LPF to reduce baro noise
 //  sprintf(Buf, "%ld pa, %ld cm \n ", baroPressureSum / (21 - 1), ms5611.BaroAlt);
 //  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
@@ -1002,6 +1015,41 @@ uint32_t readRawPressure(void)
     return readRegister24(MS5611_CMD_ADC_READ);
 }
 
+void MS561101BA_Calculate(void){
+  uint32_t D1 = ms5611.rawPressure;
+
+  uint32_t D2 = ms5611.rawTemp;
+  int32_t dT = D2 - (uint32_t)ms5611.fc[4] * 256;
+
+  int64_t OFF = (int64_t)ms5611.fc[1] * 65536 + (int64_t)ms5611.fc[3] * dT / 128;
+  int64_t SENS = (int64_t)ms5611.fc[0] * 32768 + (int64_t)ms5611.fc[2] * dT / 256;
+
+  int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
+  ms5611.T = TEMP;
+
+  ms5611.OFF2 = 0;
+  ms5611.SENS2 = 0;
+
+  if (TEMP < 2000)
+  {
+    ms5611.OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 2;
+    ms5611.SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 4;
+  }
+
+  if (TEMP < -1500)
+  {
+    ms5611.OFF2 = ms5611.OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
+    ms5611.SENS2 = ms5611.SENS2 + 11 * ((TEMP + 1500) * (TEMP + 1500)) / 2;
+  }
+
+  OFF = OFF - ms5611.OFF2;
+  SENS = SENS - ms5611.SENS2;
+
+  ms5611.P = (D1 * SENS / 2097152 - OFF) / 32768;
+//  sprintf(Buf, "ms5611.P: %d\r\n", ms5611.P);
+//  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+}
+
 int32_t readPressure(bool compensation)
 {
     uint32_t D1 = ms5611.rawPressure;
@@ -1014,26 +1062,26 @@ int32_t readPressure(bool compensation)
 
     if (compensation)
     {
-  int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
+      int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
 
-  ms5611.OFF2 = 0;
-  ms5611.SENS2 = 0;
+      ms5611.OFF2 = 0;
+      ms5611.SENS2 = 0;
 
-  if (TEMP < 2000)
-  {
-      ms5611.OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 2;
-      ms5611.SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) / 4;
-  }
+    if (TEMP < 2000)
+    {
+      ms5611.OFF2 = (5 * ((TEMP - 2000) * (TEMP - 2000))) / 2;
+      ms5611.SENS2 = (5 * ((TEMP - 2000) * (TEMP - 2000))) / 4;
+    }
 
-  if (TEMP < -1500)
-  {
+    if (TEMP < -1500)
+    {
       ms5611.OFF2 = ms5611.OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
       ms5611.SENS2 = ms5611.SENS2 + 11 * ((TEMP + 1500) * (TEMP + 1500)) / 2;
-  }
+    }
 
-  OFF = OFF - ms5611.OFF2;
-  SENS = SENS - ms5611.SENS2;
-  }
+    OFF = OFF - ms5611.OFF2;
+    SENS = SENS - ms5611.SENS2;
+    }
 
     uint32_t P = (D1 * SENS / 2097152 - OFF) / 32768;
 

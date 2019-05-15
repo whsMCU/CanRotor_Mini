@@ -238,8 +238,8 @@ int main(void)
         gps_parse();
         #endif
 
-        read_barometer();
-        //Baro_update();
+        //read_barometer();
+        Baro_update();
         #ifdef DEVO7_Recive
         computeRC();
         #endif
@@ -249,7 +249,7 @@ int main(void)
         PwmWriteMotor();
 
         //PrintData(3);   //GPS Data
-        PrintData(10);
+     //   PrintData(10);
      //   PrintData(5);   //All Data Out Put
        //PrintData(6);   //PID Tune
 
