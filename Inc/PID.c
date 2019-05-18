@@ -102,11 +102,27 @@ void PIDControlInit(pidc_t *pid)
 	pid->output2[YAW] = 0.0f;
 }
 
+int16_t  magHold,headFreeModeHold; // [-180;+180]
+
 void Control(void)
 {
 	int axis;
 	float error, deriv;
 	dt_recip = 1/pid.ts;
+	if(!f.ARMED){
+	  headFreeModeHold = imu.gyroYaw;
+	}
+
+#if defined(HEADFREE)
+  if(f.HEADFREE_MODE) { //to optimize
+    float radDiff = (imu.gyroYaw - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
+    float cosDiff = cos(radDiff);
+    float sinDiff = sin(radDiff);
+    int16_t rcCommand_PITCH = RC.rcCommand[PITCH]*cosDiff + RC.rcCommand[ROLL]*sinDiff;
+    RC.rcCommand[ROLL] =  RC.rcCommand[ROLL]*cosDiff - RC.rcCommand[PITCH]*sinDiff;
+    RC.rcCommand[PITCH] = rcCommand_PITCH;
+  }
+#endif
 	
 	#ifdef PID_DUAL
 		//axis pid
@@ -183,7 +199,7 @@ void Control(void)
 
 	  /*Remember some variables for next time*/
 	  pid.lastInput[YAW] = imu.gyroYaw;//imu.Yaw
-		#endif
+#endif
 	  if(f.Tuning_MODE == 1){
 	    RGB_G_TOGGLE;
 	    f.Write_MODE = 1;

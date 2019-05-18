@@ -811,11 +811,7 @@ uint8_t Baro_update(void)
 {
     static uint32_t baroDeadline = 0;
     static int state = 0;
-    static int taskOrder = 0;
 
-    switch (taskOrder){
-    case 0:
-       taskOrder++;
        if(state >= 2){
          state = 0;
          MS561101BA_Calculate();
@@ -836,21 +832,10 @@ uint8_t Baro_update(void)
          baroDeadline +=10000;
        }
        state ++;
-       break;
-
-    case 1:
-      taskOrder++;
-       getEstimatedAltitude();
-       break;
-
-    case 2:
-      taskOrder = 0;
-      break;
-    }
     return 1;
 }
 
-int getEstimatedAltitude(void)
+uint8_t getEstimatedAltitude(void)
 {
   static float baroGroundTemperatureScale,logBaroGroundPressureSum;
   static uint16_t previousT;

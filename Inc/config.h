@@ -10,6 +10,8 @@
 #define PID_NORMAL
 //#define PID_DUAL
 
+#define HEADFREE
+
 #define QUAD_X
 //#define QUAD_P
 
@@ -17,7 +19,7 @@
 
 //#define GPS_Recive
 //#define DEVO7_Recive
-//#define BLE_Recive
+#define BLE_Recive
 //#define Telemetry
 //#define SSD1306
 

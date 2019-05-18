@@ -234,16 +234,33 @@ int main(void)
     /* USER CODE END WHILE */
     LED0_TOGGLE; //RED
 
-        #ifdef GPS_Recive
-        gps_parse();
-        #endif
-
-        //read_barometer();
-        Baro_update();
         #ifdef DEVO7_Recive
         computeRC();
         #endif
         computeIMU();
+        static uint8_t taskOrder = 0;
+        switch (taskOrder){
+            case 0:
+               taskOrder++;
+               if(Baro_update() !=0) break;
+            case 1:
+              taskOrder++;
+               if(getEstimatedAltitude() !=0) break;
+            case 2:
+              taskOrder++;
+              #ifdef GPS_Recive
+              if(gps_parse() !=0) break;
+              #endif
+            case 3:
+              taskOrder = 0;
+              HAL_ADC_Start(&hadc1);
+               if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
+               {
+                 BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
+                 BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
+               }
+              break;
+         }
         Control();
         mixTable();
         PwmWriteMotor();
@@ -253,12 +270,6 @@ int main(void)
      //   PrintData(5);   //All Data Out Put
        //PrintData(6);   //PID Tune
 
-      HAL_ADC_Start(&hadc1);
-       if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
-       {
-         BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
-         BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
-      }
        flight_mode_signal();
       #ifdef BLE_Recive
       SerialCom();

@@ -198,8 +198,8 @@ void PrintData(uint8_t command)
 		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
-		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d) \r\n",
-	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE);
+		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
+	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
@@ -231,7 +231,7 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d \r\n ", l_t, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt);
+		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", l_t, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt, f.ARMED);
 		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
 		break;
@@ -337,12 +337,11 @@ void SerialCom(void) {
 				for(i=0; i < 5; i++){
 					RC_Raw.rcCommand[i]  = read8();
 				}
-		 
     		RC.rcCommand[ROLL]     = map(RC_Raw.rcCommand[ROLL], 0, 250, -20, 20)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
 		    RC.rcCommand[PITCH]    = map(RC_Raw.rcCommand[PITCH], 0, 250, -20, 20)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
 		    RC.rcCommand[YAW]      = map(RC_Raw.rcCommand[YAW], 0, 250, -100, 100); //0~250 left:0, right:250
-	        RC.rcCommand[THROTTLE] = map(RC_Raw.rcCommand[THROTTLE], 0, 250, 0, 1800);//0~250
-	        RC.rcCommand[AUX1] 	   =  RC_Raw.rcCommand[GEAR];
+	      RC.rcCommand[THROTTLE] = map(RC_Raw.rcCommand[THROTTLE], 0, 250, 0, 1800);//0~250
+	      RC.rcCommand[AUX1] 	   =  RC_Raw.rcCommand[GEAR];
 			 break;
 				
 		 case MSP_RC:
@@ -382,7 +381,12 @@ void SerialCom(void) {
        break;
 
 		 case MSP_ACC_CALIBRATION:
-			 if(!f.ARMED) calibratingA=512;
+			 //if(!f.ARMED) calibratingA=512;
+			 if(!f.HEADFREE_MODE){
+			   f.HEADFREE_MODE = 1;
+			 }else{
+			   f.HEADFREE_MODE = 0;
+			 }
 
 		break;
 		 	case MSP_TRIM_UP:

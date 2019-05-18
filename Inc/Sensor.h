@@ -519,7 +519,7 @@ void MS5611_Init(ms5611_osr_t osr);
 
 void Baro_Common(void);
 uint8_t Baro_update(void);
-int getEstimatedAltitude(void);
+uint8_t getEstimatedAltitude(void);
 
 uint32_t readRawTemperature(void);
 uint32_t readRawPressure(void);

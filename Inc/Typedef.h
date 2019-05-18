@@ -13,7 +13,7 @@ enum param {
 
 typedef struct flags_t {
     uint8_t OK_TO_ARM;
-	uint8_t ARMED;
+   	uint8_t ARMED;
 	//////////////////////
     uint8_t Tuning_MODE;
     uint8_t Write_MODE;
