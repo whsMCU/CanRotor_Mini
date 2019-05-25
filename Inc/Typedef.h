@@ -17,7 +17,6 @@ typedef struct flags_t {
 	//////////////////////
     uint8_t Tuning_MODE;
     uint8_t Write_MODE;
-
     ///////////////////////
     uint8_t ACC_CALIBRATED;
     uint8_t ANGLE_MODE;

@@ -91,7 +91,9 @@ extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
 
-volatile uint32_t loop_timer=0, l_t = 0;
+volatile uint32_t currentTime=0, cycleTime=0, previousTime=0, l_t = 0;
+int16_t overrun_count = 0;
+uint16_t timeInterleave = 0;
 
 /* USER CODE END PV */
 
@@ -226,7 +228,7 @@ int main(void)
    HAL_UART_Receive_DMA(&huart1, (uint8_t*)rx1_buffer, 1);
    HAL_UART_Receive_DMA(&huart2, (uint8_t*)rx2_buffer, 1);
   /* USER CODE END 2 */
-
+   previousTime = micros();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -266,21 +268,39 @@ int main(void)
         PwmWriteMotor();
 
         //PrintData(3);   //GPS Data
-        PrintData(10);
-     //   PrintData(5);   //All Data Out Put
-       //PrintData(6);   //PID Tune
+       // PrintData(10);
+    //    PrintData(5);   //All Data Out Put
+    //   PrintData(6);   //PID Tune
 
-       flight_mode_signal();
+      flight_mode_signal();
       #ifdef BLE_Recive
       SerialCom();
       #endif
       #ifdef Telemetry
-      SendTelemetry();
+      //SendTelemetry();
+      uint8_t t=0;
+      timeInterleave = micros();
+      SerialCom();
+      while((int16_t)(micros()-timeInterleave)<650) t=1;
+      if(!t) overrun_count++;
       #endif
-      if (micros() - loop_timer > 4050)Error.error = 4;                                      //Output an error if the loop time exceeds 4050us.
-      l_t = micros() - loop_timer;
-      while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
-      loop_timer = micros();
+      l_t = micros() - currentTime;
+      while(1){
+        currentTime = micros();
+        cycleTime = currentTime - previousTime;
+        #if defined(LOOP_TIME)
+          if (cycleTime >= LOOP_TIME){
+            if(cycleTime > (LOOP_TIME+50)){
+              RGB_R_TOGGLE;
+              Error.error = 4;
+            }
+            break;
+          }
+        #else
+          break;
+        #endif
+      }
+      previousTime = currentTime;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -673,7 +693,6 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE BEGIN USART1_Init 1 */
 
   /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
   huart1.Instance = USART1;
 #ifdef GPS_Recive
   huart1.Init.BaudRate = 57600;//57600

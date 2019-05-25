@@ -19,8 +19,12 @@
 
 //#define GPS_Recive
 //#define DEVO7_Recive
-#define BLE_Recive
-//#define Telemetry
+//#define BLE_Recive
+#define Telemetry
 //#define SSD1306
+
+
+  /**********************************  constant loop time  ******************************/
+    #define LOOP_TIME 4000
 
 #endif

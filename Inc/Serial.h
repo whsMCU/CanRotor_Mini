@@ -8,6 +8,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 #define UART2 1
 
 void TX_CHR(char ch);
+void TX2_CHR(char ch);
 int fputc(int ch, FILE *f);
 ///////////////////////////////////////////////////////////
 void PrintData(uint8_t command);

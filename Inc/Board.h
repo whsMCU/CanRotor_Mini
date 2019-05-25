@@ -42,7 +42,6 @@ extern DMA_HandleTypeDef hdma_usart2_tx;
 extern DMA_HandleTypeDef hdma_usart2_rx;
 extern char Buf[128];
 extern int Flight_Status;
-extern float angle[3];
 extern int Flight_Status;
 extern float output[3];
 extern float ITerm[3];
@@ -62,7 +61,8 @@ extern rc RC;
 extern rc RC_Raw;
 extern alt_t alt;
 
-extern volatile uint32_t l_t;
+extern volatile uint32_t l_t, cycleTime, currentTime;
+extern int16_t overrun_count;
 extern uint32_t baroPressureSum;
 
 

@@ -8,6 +8,8 @@ int MSP_TRIM[3]={0, 0, 0};
 
 uint8_t Debug_TC=0;
 
+uint16_t time=0, time1=0, aftertime=0;
+
 ////////////////////////////////////////////
 
 volatile uint8_t rx1_buffer[16];
@@ -44,7 +46,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart->Instance == USART1) //current USART
 		{
 			write_Q(&Q_buffer[UART1], rx1_buffer[0]);
-			//TX_CHR(rx1_buffer[0]);
+			//TX2_CHR(rx1_buffer[0]);
 		}
 		
 	if(huart->Instance == USART2) //current USART
@@ -55,7 +57,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void TX_CHR(char ch){
 	while(!(USART1->SR & 0x80));
-	USART1->DR = ch;
+  USART1->DR = ch;
+
+}
+void TX2_CHR(char ch){
+  while(!(USART2->SR & 0x80));
+  USART2->DR = ch;
 }
 
 ///////////////////////////////////////////////////
@@ -65,25 +72,25 @@ void serialize8(uint8_t a)
     currentPortState->checksum ^= a;
 }
 
-void serialize32(uint32_t a)
-{
-    serialize8(a & 0xFF);
-    serialize8((a >> 8) & 0xFF);
-    serialize8((a >> 16) & 0xFF);
-    serialize8((a >> 24) & 0xFF);
-}
-
 void serialize16(int16_t a)
 {
-    serialize8(a & 0xFF);
-    serialize8((a >> 8) & 0xFF);
+    serialize8((a   ) & 0xFF);
+    serialize8((a>>8) & 0xFF);
+}
+
+void serialize32(uint32_t a)
+{
+    serialize8((a    ) & 0xFF);
+    serialize8((a>> 8) & 0xFF);
+    serialize8((a>>16) & 0xFF);
+    serialize8((a>>24) & 0xFF);
 }
 
 uint8_t read8(void)
 {
     return currentPortState->inBuf[currentPortState->indRX++] & 0xff;
 }
-//currentPortState->inBuf[0];
+
 uint16_t read16(void)
 {
     uint16_t t = read8();
@@ -135,7 +142,22 @@ void headSerialError(uint8_t s)
 
 void tailSerialReply(void)
 {
+    time = micros();
     serialize8(currentPortState->checksum);
+    aftertime = micros();
+     time1 = aftertime - time;
+     sprintf(Buf, "time : %d\r\n ", time1);
+     HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+}
+
+void s_struct_partial(uint8_t *cb,uint8_t siz) {
+  while(siz--) serialize8(*cb++);
+}
+
+void s_struct(uint8_t *cb,uint8_t siz) {
+  headSerialReply(siz);  //530
+  s_struct_partial(cb,siz); //870
+  tailSerialReply(); //170
 }
 ///////////////////////////////////////////////////
 
@@ -198,8 +220,10 @@ void PrintData(uint8_t command)
 		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
-		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
-	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE);
+//		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
+//	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE);
+	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, error : %d, %d \r\n",
+	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, Error.error, overrun_count);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
@@ -308,7 +332,6 @@ void SerialCom(void) {
       if (currentPortState->checksum == c) {
 				evaluateCommand();
       }
-
       currentPortState->c_state = IDLE;
     }
    }
@@ -316,7 +339,7 @@ void SerialCom(void) {
  }
 
  void evaluateCommand(void) {
-	 uint32_t i=0;
+	 uint8_t i=0;
 
 	 switch(currentPortState->cmdMSP){
 		 case MSP_ARM:
@@ -345,25 +368,57 @@ void SerialCom(void) {
 			 break;
 				
 		 case MSP_RC:
-			 	headSerialReply(10);
-			  for (i = 0; i < 5; i++)
-                serialize16(RC.rcCommand[i]);
-				tailSerialReply();
+		 {  struct {
+		    uint16_t roll, pitch, yaw, throttle, aux1;
+		    } rc;
+		    rc.roll     = RC.rcCommand[ROLL];
+		    rc.pitch    = RC.rcCommand[PITCH];
+		    rc.yaw      = RC.rcCommand[YAW];
+		    rc.throttle = RC.rcCommand[THROTTLE];
+		    rc.aux1     = RC.rcCommand[AUX1];
+//			 	headSerialReply(10);
+//			  for (i = 0; i < 5; i++)
+//         serialize16(RC.rcCommand[i]);
+//				tailSerialReply();
+		   s_struct((uint8_t*)&rc, 10);
 			 break;
-				
+		 }
 			case MSP_RAW_IMU:
+//	     {  struct {
+//	        int32_t roll, pitch, yaw;
+//	        } angle;
+//	        angle.roll     = (int32_t)imu.AHRS[ROLL]+400;
+//	        angle.pitch    = (int32_t)imu.AHRS[PITCH]+400;
+//	        angle.yaw      = (int32_t)imu.AHRS[YAW]+400;
+//	       s_struct((uint8_t*)&angle, 12);
+//	       break;
+//	     }
+//        sprintf(Buf, "IMU : %d, %d, %d\r\n ", currentPortState->dataSize, currentPortState->cmdMSP, currentPortState->checksum);
+//        HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 				headSerialReply(12);
 			  for (i = 0; i < 3; i++)
-				  serialize32(angle[i]);
+				  serialize32(imu.AHRS[i]+400);
 				tailSerialReply();
 			 break;
 
+	    case MSP_STATUS:
+	    { struct {
+	        uint16_t cycleTime;
+	        uint8_t mode, error, errors_count;
+	      } st;
+	      st.cycleTime    = cycleTime;
+	      st.mode         = f.ARMED;
+	      st.error        = Error.error;
+	      st.errors_count = Error.error_counter;
+	      s_struct((uint8_t*)&st,5);
+	      break;
+	    }
 		 case MSP_PID:
 			 	headSerialReply(36);
 			  for (i = 0; i < 3; i++){
-				serialize32(pid.kp[i]*10);
-				serialize32(pid.ki[i]*10);
-				serialize32(pid.kd[i]*10);
+				 serialize32(pid.kp[i]*10);
+				 serialize32(pid.ki[i]*10);
+				 serialize32(pid.kd[i]*10);
 				}
 				tailSerialReply();
        break;			
@@ -417,6 +472,11 @@ void SerialCom(void) {
 //          GPSValues result = p.evalGPS(inBuf);
 //          logger.logGPS(result);
 			 break;
+
+		 default:
+		   //headSerialError();
+		   //tailSerialReply();
+		   break;
 	 }
 
  }

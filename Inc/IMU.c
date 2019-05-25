@@ -2,7 +2,6 @@
 #include "Board.h"
 TM_AHRSIMU_t AHRSIMU;
 
-float angle[3] = { 0, 0, 0};
 float Pre_IMU[3] = {0, 0, 0};
 float Pre_gyro = 0;
 float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};

@@ -817,8 +817,8 @@ uint8_t Baro_update(void)
          MS561101BA_Calculate();
          return 1;
        }
-       if ((int32_t)(loop_timer - baroDeadline) < 0) return 0;
-       baroDeadline = loop_timer;
+       if ((int32_t)(currentTime - baroDeadline) < 0) return 0;
+       baroDeadline = currentTime;
        if (state == 0) {
          Baro_Common();
          ms5611.rawTemp = readRegister24(MS5611_CMD_ADC_READ);
