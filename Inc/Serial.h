@@ -89,5 +89,28 @@ typedef enum serialState_t {
 
 #define MSP_DEBUGMSG             253   //out message         debug string buffer
 #define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
+////////////////////////////////////////////////////////////////////////////////////////////////
+#define TELEMERY_ERROR            1
+#define TELEMERY_ARMED_MODE       2
+#define TELEMERY_HEADFREE_MODE    3
+#define TELEMERY_CYCLE_TIME       4
+#define TELEMERY_BAT_VOLT         5
+#define TELEMERY_TEMPERATURE      6
+#define TELEMERY_ANGLE_ROLL       7
+#define TELEMERY_ANGLE_PITCH      8
+#define TELEMERY_ANGLE_YAW        9
+#define TELEMERY_HEADING          10
+#define TELEMERY_ARMD_TIME        11
+#define TELEMERY_BARO_EST         12
+#define TELEMERY_PID_RP_P         13
+#define TELEMERY_PID_RP_I         14
+#define TELEMERY_PID_RP_D         15
+#define TELEMERY_PID_Y_P          16
+#define TELEMERY_PID_Y_I          17
+#define TELEMERY_PID_Y_D          18
+#define TELEMERY_NUM_SATS         19
+#define TELEMERY_FIX_TYPE         20
+#define TELEMERY_GPS_LAT          21
+#define TELEMERY_GPS_LON          22
 
 #endif

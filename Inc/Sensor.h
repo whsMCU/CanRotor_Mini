@@ -27,6 +27,10 @@ typedef struct {
 	
   float AHRS[3];
   float AHRS_DP[3];
+
+  float compass_x_horizontal;
+  float compass_y_horizontal;
+  float actual_compass_heading;
 	
 } imu_t;
 
@@ -482,10 +486,14 @@ typedef struct {
   int64_t OFF2, SENS2;
 
   uint32_t rawTemp;
-  uint32_t realTemperature;
+  int16_t realTemperature;
 
   uint32_t rawPressure;
-  int64_t realPressure;
+  int32_t realPressure;
+  int32_t avg_realPressure;
+  int32_t actual_pressure;
+  int32_t ground_pressure;
+  int32_t altitude_ref_ground;
 
   int32_t BaroAlt;
 
@@ -510,6 +518,7 @@ void Temp_getADC(void);
 void GYRO_common(void);
 void ACC_common(void);
 void MAG_common(void);
+void CAL_Heading(void);
 void calibrateMPU9250(float * dest1, float * dest2);
 void initAK8963(float * destination);
 void MPU9250SelfTest(float * destination);

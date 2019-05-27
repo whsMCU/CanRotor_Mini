@@ -38,7 +38,7 @@ void calculateAngles(TM_AHRSIMU_t* AHRSIMU) {
     /* Calculate degrees and remove inclination */
     AHRSIMU->Roll *= R2D;
     AHRSIMU->Pitch *= R2D;
-    AHRSIMU->Yaw = -(AHRSIMU->Yaw) * R2D - AHRSIMU->Inclination;
+    AHRSIMU->Yaw = -(AHRSIMU->Yaw) * R2D;// - AHRSIMU->Inclination;
 
     /* Check values because of inclination */
     if (AHRSIMU->Yaw < -180) {
@@ -383,6 +383,7 @@ void computeIMU(void)
 	Gyro_getADC();
   ACC_getADC();
   Mag_getADC();                                               //Read the raw acc and gyro data from the MPU-6050
+  CAL_Heading();
 	Temp_getADC();
 //  }
 #ifdef IMU_NORMAL

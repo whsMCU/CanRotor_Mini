@@ -65,6 +65,9 @@ extern volatile uint32_t l_t, cycleTime, currentTime;
 extern int16_t overrun_count;
 extern uint32_t baroPressureSum;
 
+extern uint8_t telemetry_loop_counter;
+extern uint16_t time, time1, aftertime;
+extern uint32_t armedTime;
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846f

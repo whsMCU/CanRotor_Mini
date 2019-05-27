@@ -115,6 +115,7 @@ void mwArm(void)
 	if(!f.ARMED){
 		f.ARMED = 1;
 		f.Tuning_MODE = 0;
+		ms5611.ground_pressure = ms5611.avg_realPressure;
 	}
 }
 void mwDisarm(void)

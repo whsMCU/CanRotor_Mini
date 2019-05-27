@@ -23,7 +23,15 @@ ms5611_t ms5611;
 #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = X; imu.accADC[PITCH]  = Y; imu.accADC[YAW]  = Z;}
 #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = X; imu.gyroADC[PITCH] = Y; imu.gyroADC[YAW] = Z;}
 #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  = X; imu.magADC[PITCH]  = Y; imu.magADC[YAW]  = Z;}
-
+//Cell phone compass ref. 340
+//-,+,+ = 83
+//-,-,+ = 278
+//-,-,- = 278
+//-,+,- = 82
+//+,-,+ = 262
+//+,-,- = 262
+//+,+,- = 97
+//+,+,+ = 97
 // Specify sensor full scale
 uint8_t Gscale = GFS_250DPS;
 uint8_t Ascale = AFS_2G;
@@ -401,6 +409,23 @@ void MAG_Common(void)
   {
     imu.magRaw[axis] = (float)imu.magADC[axis] * mRes * magCalibration[axis] - magBias[axis];
   }
+}
+
+void CAL_Heading(void)
+{
+  //The compass values change when the roll and pitch angle of the quadcopter changes. That's the reason that the x and y values need to calculated for a virtual horizontal position.
+  //The 0.0174533 value is phi/180 as the functions are in radians in stead of degrees.
+  imu.compass_x_horizontal = (float)imu.magRaw[ROLL] * cos(imu.AHRS[PITCH] * -0.0174533) + (float)imu.magRaw[PITCH] * sin(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * -0.0174533) - (float)imu.magRaw[YAW] * cos(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * -0.0174533);
+  imu.compass_y_horizontal = (float)imu.magRaw[PITCH] * cos(imu.AHRS[ROLL] * 0.0174533) + (float)imu.magRaw[YAW] * sin(imu.AHRS[ROLL] * 0.0174533);
+
+  //Now that the horizontal values are known the heading can be calculated. With the following lines of code the heading is calculated in degrees.
+  //Please note that the atan2 uses radians in stead of degrees. That is why the 180/3.14 is used.
+  if (imu.compass_y_horizontal < 0)imu.actual_compass_heading = 180 + (180 + ((atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180 / 3.14)));
+  else imu.actual_compass_heading = (atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180 / 3.14);
+
+  imu.actual_compass_heading += AHRSIMU.Inclination;                                 //Add the declination to the magnetic compass heading to get the geographic north.
+  if (imu.actual_compass_heading < 0) imu.actual_compass_heading += 360;         //If the compass heading becomes smaller then 0, 360 is added to keep it in the 0 till 360 degrees range.
+  else if (imu.actual_compass_heading >= 360) imu.actual_compass_heading -= 360; //If the compass heading becomes larger then 360, 360 is subtracted to keep it in the 0 till 360 degrees range.
 }
 
 void Temp_getADC(void)
@@ -805,6 +830,7 @@ void Baro_Common(void)
   baroPressureSum += baroHistTab[baroHistIdx];
   baroPressureSum -= baroHistTab[indexplus1];
   baroHistIdx = indexplus1;
+  ms5611.avg_realPressure = baroPressureSum/20;
 }
 
 uint8_t Baro_update(void)
@@ -850,8 +876,10 @@ uint8_t getEstimatedAltitude(void)
     logBaroGroundPressureSum = log(baroPressureSum);
     baroGroundTemperatureScale = ((int32_t)ms5611.realTemperature + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
     calibratingB--;
+    ms5611.ground_pressure = ms5611.avg_realPressure;
   }
-
+  //ms5611.altitude_ref_ground = (ms5611.ground_pressure - ms5611.avg_realPressure) * 0.117;
+  ms5611.altitude_ref_ground = (44330.0f * (1.0f - pow((double)ms5611.avg_realPressure / (double)ms5611.ground_pressure, 0.1902949f)));
   // baroGroundPressureSum is not supposed to be 0 here
   // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
   ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
@@ -888,7 +916,7 @@ void MS561101BA_Calculate(void){
   int64_t SENS = (int64_t)ms5611.fc[0] * 32768 + (int64_t)ms5611.fc[2] * dT / 256;
 
   int32_t TEMP = 2000 + ((int64_t) dT * ms5611.fc[5]) / 8388608;
-  ms5611.realTemperature = TEMP;
+  ms5611.realTemperature = (uint32_t)TEMP;
 
   ms5611.OFF2 = 0;
   ms5611.SENS2 = 0;

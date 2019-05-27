@@ -8,6 +8,7 @@ int MSP_TRIM[3]={0, 0, 0};
 
 uint8_t Debug_TC=0;
 
+uint8_t telemetry_loop_counter = 0;
 uint16_t time=0, time1=0, aftertime=0;
 
 ////////////////////////////////////////////
@@ -142,12 +143,7 @@ void headSerialError(uint8_t s)
 
 void tailSerialReply(void)
 {
-    time = micros();
     serialize8(currentPortState->checksum);
-    aftertime = micros();
-     time1 = aftertime - time;
-     sprintf(Buf, "time : %d\r\n ", time1);
-     HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 }
 
 void s_struct_partial(uint8_t *cb,uint8_t siz) {
@@ -222,8 +218,8 @@ void PrintData(uint8_t command)
 	case 5:
 //		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
 //	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE);
-	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, error : %d, %d \r\n",
-	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, Error.error, overrun_count);
+	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, error : %d, %d, %d, %d, %d, %3.1f\r\n",
+	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, Error.error, overrun_count, ms5611.avg_realPressure, ms5611.ground_pressure, ms5611.altitude_ref_ground, imu.actual_compass_heading);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
@@ -482,15 +478,117 @@ void SerialCom(void) {
  }
 
 void SendTelemetry(void){
-  static int x = 0;
-  x++;
-  if (x >= 1000){
-    x = 0;
-    RGB_B_TOGGLE;
-    headSerialSend(3, MSP_PID);
-    serialize8(10);
-    serialize8(20);
-    serialize8(110);
+  //uint32_t tmp = 0;
+  telemetry_loop_counter++;
+  if (telemetry_loop_counter == 1){
+    headSerial(0, 1, TELEMERY_ERROR);
+    serialize8(Error.error);
     tailSerialReply();
   }
+  if (telemetry_loop_counter == 2){
+    headSerial(0, 1, TELEMERY_ARMED_MODE);
+    serialize8(f.ARMED);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 3){
+    headSerial(0, 1, TELEMERY_HEADFREE_MODE);
+    serialize8(f.HEADFREE_MODE);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 4){
+    headSerial(0, 2, TELEMERY_CYCLE_TIME);
+    serialize16((uint16_t)cycleTime);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 5){
+    headSerial(0, 4, TELEMERY_BAT_VOLT);
+    serialize32(BAT.VBAT*10);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 6){
+    headSerial(0, 4, TELEMERY_TEMPERATURE);
+    serialize32(imu.Temp*10);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 7){
+    headSerial(0, 4, TELEMERY_ANGLE_ROLL);
+    serialize32(imu.AHRS[ROLL]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 8){
+    headSerial(0, 4, TELEMERY_ANGLE_PITCH);
+    serialize32(imu.AHRS[PITCH]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 9){
+    headSerial(0, 4, TELEMERY_ANGLE_YAW);
+    serialize32(imu.AHRS[YAW]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 10){
+    headSerial(0, 4, TELEMERY_HEADING);
+    serialize32(imu.actual_compass_heading);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 11){
+    headSerial(0, 4, TELEMERY_ARMD_TIME);
+    serialize32(armedTime);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 12){
+    headSerial(0, 4, TELEMERY_BARO_EST);
+    serialize32(ms5611.altitude_ref_ground);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 13){
+    headSerial(0, 4, TELEMERY_PID_RP_P);
+    serialize32(pid.kp[0]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 14){
+    headSerial(0, 4, TELEMERY_PID_RP_I);
+    serialize32(pid.ki[0]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 15){
+    headSerial(0, 4, TELEMERY_PID_RP_D);
+    serialize32(pid.kd[0]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 16){
+    headSerial(0, 4, TELEMERY_PID_Y_P);
+    serialize32(pid.kd[2]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 17){
+    headSerial(0, 4, TELEMERY_PID_Y_I);
+    serialize32(pid.kd[2]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 18){
+    headSerial(0, 4, TELEMERY_PID_Y_D);
+    serialize32(pid.kd[2]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 19){
+    headSerial(0, 1, TELEMERY_NUM_SATS);
+    serialize8(GPS.satellites);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 20){
+    headSerial(0, 1, TELEMERY_FIX_TYPE);
+    serialize8(GPS.fixquality);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 21){
+    headSerial(0, 4, TELEMERY_GPS_LAT);
+    serialize32(GPS.latitudeDegrees);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 22){
+    headSerial(0, 4, TELEMERY_GPS_LON);
+    serialize32(GPS.longitudeDegrees);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 50) telemetry_loop_counter = 0;
 }

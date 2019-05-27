@@ -92,6 +92,11 @@ extern uint8_t rx2_buffer[1];
 int Flight_Status = 0;
 
 volatile uint32_t currentTime=0, cycleTime=0, previousTime=0, l_t = 0;
+
+uint16_t cycleTimeMax = 0;
+uint16_t cycleTimemin = 65535;
+uint32_t armedTime = 0;
+
 int16_t overrun_count = 0;
 uint16_t timeInterleave = 0;
 
@@ -173,7 +178,7 @@ int main(void)
 
    #ifdef IMU_AHRS
    /* Init structure with 100hZ sample rate, 0.1 beta and 3.5 inclination (3.5 degrees is inclination in Ljubljana, Slovenia) on July, 2016 */
-  TM_AHRSIMU_Init(&AHRSIMU, 250, 0.1f, 0.0f);
+  TM_AHRSIMU_Init(&AHRSIMU, 250, 0.1f, 243.0f);
        #endif
 
   Calibrate_gyro();
@@ -269,7 +274,7 @@ int main(void)
 
         //PrintData(3);   //GPS Data
        // PrintData(10);
-    //    PrintData(5);   //All Data Out Put
+        PrintData(5);   //All Data Out Put
     //   PrintData(6);   //PID Tune
 
       flight_mode_signal();
@@ -277,11 +282,16 @@ int main(void)
       SerialCom();
       #endif
       #ifdef Telemetry
-      //SendTelemetry();
+      SerialCom();
       uint8_t t=0;
       timeInterleave = micros();
-      SerialCom();
-      while((int16_t)(micros()-timeInterleave)<650) t=1;
+//          time = micros();
+      SendTelemetry();
+//          aftertime = micros();
+//           time1 = aftertime - time;
+//           sprintf(Buf, "count : %d, time : %d\r\n ",telemetry_loop_counter, time1);
+//           HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+      while((int16_t)(micros()-timeInterleave)<1500) t=1; //650
       if(!t) overrun_count++;
       #endif
       l_t = micros() - currentTime;
@@ -301,6 +311,13 @@ int main(void)
         #endif
       }
       previousTime = currentTime;
+
+    if(f.ARMED){
+      armedTime += (uint32_t)cycleTime;
+    }
+    if(cycleTime > cycleTimeMax) cycleTimeMax = cycleTime;
+    if(cycleTime < cycleTimemin) cycleTimemin = cycleTime;
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
