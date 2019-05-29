@@ -178,7 +178,7 @@ int main(void)
 
    #ifdef IMU_AHRS
    /* Init structure with 100hZ sample rate, 0.1 beta and 3.5 inclination (3.5 degrees is inclination in Ljubljana, Slovenia) on July, 2016 */
-  TM_AHRSIMU_Init(&AHRSIMU, 250, 0.1f, 243.0f);
+  TM_AHRSIMU_Init(&AHRSIMU, 250, 1.2f, 0.0f);
        #endif
 
   Calibrate_gyro();

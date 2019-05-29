@@ -38,7 +38,7 @@ void calculateAngles(TM_AHRSIMU_t* AHRSIMU) {
     /* Calculate degrees and remove inclination */
     AHRSIMU->Roll *= R2D;
     AHRSIMU->Pitch *= R2D;
-    AHRSIMU->Yaw = -(AHRSIMU->Yaw) * R2D;// - AHRSIMU->Inclination;
+    AHRSIMU->Yaw *= R2D;// - AHRSIMU->Inclination;
 
     /* Check values because of inclination */
     if (AHRSIMU->Yaw < -180) {
@@ -47,10 +47,11 @@ void calculateAngles(TM_AHRSIMU_t* AHRSIMU) {
         AHRSIMU->Yaw = -180.0f - (180.0f - AHRSIMU->Yaw);
     }
 
-//  AHRSIMU->Roll  = (0.96 * Pre_IMU[ROLL]  ) + ((0.04) * AHRSIMU->Roll);
-//	AHRSIMU->Pitch = (0.96 * Pre_IMU[PITCH] ) + ((0.04) * AHRSIMU->Pitch);
-//	AHRSIMU->Yaw   = (0.96 * Pre_IMU[YAW]   ) + ((0.04) * AHRSIMU->Yaw);
-		
+    if (AHRSIMU->Yaw >= 180) {
+        AHRSIMU->Yaw -= 360.0f;
+    } else if (AHRSIMU->Yaw < -180) {
+        AHRSIMU->Yaw += 360.0f;
+    }
 
   AHRSIMU->Roll  = (0.95 * (Pre_IMU[ROLL]  + (imu.gyroRaw[ROLL] * 0.004)))  + (0.05 * AHRSIMU->Roll);
   AHRSIMU->Pitch = (0.95 * (Pre_IMU[PITCH] + (imu.gyroRaw[PITCH] * 0.004))) + (0.05 * AHRSIMU->Pitch);
@@ -402,11 +403,11 @@ void computeIMU(void)
 #ifdef IMU_AHRS
     /* Call update function */
     /* This function must be called periodically in inteervals set by sample rate on initialization process */
-	TM_AHRSIMU_UpdateIMU(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
+	  TM_AHRSIMU_UpdateIMU(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
 
-	 // MadgwickQuaternionUpdate(imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.gyroRaw[ROLL]*AHRSIMU_PI/180.0f, imu.gyroRaw[PITCH]*AHRSIMU_PI/180.0f, imu.gyroRaw[YAW]*AHRSIMU_PI/180.0f,  imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
+	//  MadgwickQuaternionUpdate(imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.gyroRaw[ROLL]*AHRSIMU_PI/180.0f, imu.gyroRaw[PITCH]*AHRSIMU_PI/180.0f, imu.gyroRaw[YAW]*AHRSIMU_PI/180.0f,  imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
 	//TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
 	
-  //TM_AHRSIMU_UpdateAHRS(&AHRSIMU, AHRSIMU_DEG2RAD(imu.gyroRaw[ROLL]), AHRSIMU_DEG2RAD(imu.gyroRaw[PITCH]), AHRSIMU_DEG2RAD(imu.gyroRaw[YAW]), imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
+  //TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], -imu.gyroRaw[PITCH], -imu.gyroRaw[YAW], -imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[PITCH], -imu.magRaw[ROLL], imu.magRaw[YAW]);
 	#endif
 }

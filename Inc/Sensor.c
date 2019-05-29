@@ -22,7 +22,7 @@ ms5611_t ms5611;
 
 #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = X; imu.accADC[PITCH]  = Y; imu.accADC[YAW]  = Z;}
 #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = X; imu.gyroADC[PITCH] = Y; imu.gyroADC[YAW] = Z;}
-#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  = X; imu.magADC[PITCH]  = Y; imu.magADC[YAW]  = Z;}
+#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[PITCH]  = X; imu.magADC[ROLL]  = Y; imu.magADC[YAW]  = -Z;}
 //Cell phone compass ref. 340
 //-,+,+ = 83
 //-,-,+ = 278
@@ -426,6 +426,13 @@ void CAL_Heading(void)
   imu.actual_compass_heading += AHRSIMU.Inclination;                                 //Add the declination to the magnetic compass heading to get the geographic north.
   if (imu.actual_compass_heading < 0) imu.actual_compass_heading += 360;         //If the compass heading becomes smaller then 0, 360 is added to keep it in the 0 till 360 degrees range.
   else if (imu.actual_compass_heading >= 360) imu.actual_compass_heading -= 360; //If the compass heading becomes larger then 360, 360 is subtracted to keep it in the 0 till 360 degrees range.
+  ///////////////////////////////////////////////////////////////////////////////////////////
+//  imu.compass_x_horizontal = (float)imu.magRaw[ROLL] * cos(imu.AHRS[PITCH] * 0.0174533) + (float)imu.magRaw[YAW] * sin(imu.AHRS[PITCH] * 0.0174533);
+//  imu.compass_y_horizontal = (float)imu.magRaw[ROLL] * sin(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * 0.0174533) + (float)imu.magRaw[PITCH] * cos(imu.AHRS[ROLL] * 0.0174533) - imu.magRaw[YAW] * sin(imu.AHRS[ROLL] * 0.0174533) * cos(imu.AHRS[PITCH] * 0.0174533);
+//  imu.actual_compass_heading = 180 * atan2(imu.compass_y_horizontal, imu.compass_x_horizontal) / M_PI;
+//  if (imu.compass_y_horizontal < 0){
+//    imu.actual_compass_heading+=360;
+//  }
 }
 
 void Temp_getADC(void)
@@ -687,8 +694,8 @@ void MPU9250SelfTest(float * destination) // Should return percent deviation fro
  // Report results as a ratio of (STR - FT)/FT; the change from Factory Trim of the Self-Test Response
  // To get percent, must multiply by 100
    for (i = 0; i < 3; i++) {
-     destination[i]   = 100.0*((float)(aSTAvg[i] - aAvg[i]))/factoryTrim[i] - 100.0; // Report percent differences
-     destination[i+3] = 100.0*((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3] - 100.0; // Report percent differences
+     destination[i]   = 100.0*((float)(aSTAvg[i] - aAvg[i]))/factoryTrim[i];// - 100.0; // Report percent differences
+     destination[i+3] = 100.0*((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3];// - 100.0; // Report percent differences
    }
 }
 
