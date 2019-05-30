@@ -403,10 +403,10 @@ void computeIMU(void)
 #ifdef IMU_AHRS
     /* Call update function */
     /* This function must be called periodically in inteervals set by sample rate on initialization process */
-	  TM_AHRSIMU_UpdateIMU(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
+	//  TM_AHRSIMU_UpdateIMU(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
 
 	//  MadgwickQuaternionUpdate(imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.gyroRaw[ROLL]*AHRSIMU_PI/180.0f, imu.gyroRaw[PITCH]*AHRSIMU_PI/180.0f, imu.gyroRaw[YAW]*AHRSIMU_PI/180.0f,  imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
-	//TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[PITCH], imu.magRaw[ROLL], imu.magRaw[YAW]);
+	TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW]);
 	
   //TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], -imu.gyroRaw[PITCH], -imu.gyroRaw[YAW], -imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[PITCH], -imu.magRaw[ROLL], imu.magRaw[YAW]);
 	#endif

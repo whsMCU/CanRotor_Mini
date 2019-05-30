@@ -69,6 +69,8 @@ extern uint8_t telemetry_loop_counter;
 extern uint16_t time, time1, aftertime;
 extern uint32_t armedTime;
 
+extern float magBias[3], magScale[3];
+
 #ifndef M_PI
 #define M_PI       3.14159265358979323846f
 #endif /* M_PI */
