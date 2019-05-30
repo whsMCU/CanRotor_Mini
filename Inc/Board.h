@@ -71,6 +71,8 @@ extern uint32_t armedTime;
 
 extern float magBias[3], magScale[3];
 
+extern uint16_t cycleTimeMax, cycleTimeMin;
+
 #ifndef M_PI
 #define M_PI       3.14159265358979323846f
 #endif /* M_PI */

@@ -413,20 +413,6 @@ void MAG_Common(void)
 
 void CAL_Heading(void)
 {
-  //The compass values change when the roll and pitch angle of the quadcopter changes. That's the reason that the x and y values need to calculated for a virtual horizontal position.
-  //The 0.0174533 value is phi/180 as the functions are in radians in stead of degrees.
-//  imu.compass_x_horizontal = (float)imu.magRaw[ROLL] * cos(imu.AHRS[PITCH] * -0.0174533) + (float)imu.magRaw[PITCH] * sin(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * -0.0174533) - (float)imu.magRaw[YAW] * cos(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * -0.0174533);
-//  imu.compass_y_horizontal = (float)imu.magRaw[PITCH] * cos(imu.AHRS[ROLL] * 0.0174533) + (float)imu.magRaw[YAW] * sin(imu.AHRS[ROLL] * 0.0174533);
-//
-//  //Now that the horizontal values are known the heading can be calculated. With the following lines of code the heading is calculated in degrees.
-//  //Please note that the atan2 uses radians in stead of degrees. That is why the 180/3.14 is used.
-//  if (imu.compass_y_horizontal < 0)imu.actual_compass_heading = 180 + (180 + ((atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180 / 3.14)));
-//  else imu.actual_compass_heading = (atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180 / 3.14);
-//
-//  imu.actual_compass_heading += AHRSIMU.Inclination;                                 //Add the declination to the magnetic compass heading to get the geographic north.
-//  if (imu.actual_compass_heading < 0) imu.actual_compass_heading += 360;         //If the compass heading becomes smaller then 0, 360 is added to keep it in the 0 till 360 degrees range.
-//  else if (imu.actual_compass_heading >= 360) imu.actual_compass_heading -= 360; //If the compass heading becomes larger then 360, 360 is subtracted to keep it in the 0 till 360 degrees range.
-  ///////////////////////////////////////////////////////////////////////////////////////////
   imu.compass_x_horizontal = (float)imu.magRaw[ROLL] * cos(imu.AHRS[PITCH] * 0.0174533) + (float)imu.magRaw[PITCH] * sin(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * 0.0174533) + imu.magRaw[YAW] * sin(imu.AHRS[PITCH] * 0.0174533) * cos(imu.AHRS[ROLL] * 0.0174533);
   imu.compass_y_horizontal = (float)imu.magRaw[PITCH] * cos(imu.AHRS[ROLL] * 0.0174533) - (float)imu.magRaw[YAW] * sin(imu.AHRS[ROLL] * 0.0174533);
   imu.actual_compass_heading = (atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180.0f / M_PI);

@@ -94,7 +94,7 @@ int Flight_Status = 0;
 volatile uint32_t currentTime=0, cycleTime=0, previousTime=0, l_t = 0;
 
 uint16_t cycleTimeMax = 0;
-uint16_t cycleTimemin = 65535;
+uint16_t cycleTimeMin = 65535;
 uint32_t armedTime = 0;
 
 int16_t overrun_count = 0;
@@ -178,7 +178,7 @@ int main(void)
 
    #ifdef IMU_AHRS
    /* Init structure with 100hZ sample rate, 0.1 beta and 3.5 inclination (3.5 degrees is inclination in Ljubljana, Slovenia) on July, 2016 */
-  TM_AHRSIMU_Init(&AHRSIMU, 250, 1.2f, 40.0f);
+  TM_AHRSIMU_Init(&AHRSIMU, 250, 1.2f, 0.0f);
        #endif
 
   Calibrate_gyro();
@@ -295,7 +295,7 @@ int main(void)
       while((int16_t)(micros()-timeInterleave)<1500) t=1; //650
       if(!t) overrun_count++;
       #endif
-      l_t = micros() - currentTime;
+      l_t = micros() - previousTime;
       while(1){
         currentTime = micros();
         cycleTime = currentTime - previousTime;
@@ -316,8 +316,8 @@ int main(void)
     if(f.ARMED){
       armedTime += (uint32_t)cycleTime;
     }
-    if(cycleTime > cycleTimeMax) cycleTimeMax = cycleTime;
-    if(cycleTime < cycleTimemin) cycleTimemin = cycleTime;
+    if(l_t > cycleTimeMax) cycleTimeMax = l_t;
+    if(l_t < cycleTimeMin) cycleTimeMin = l_t;
 
     /* USER CODE BEGIN 3 */
   }

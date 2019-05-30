@@ -110,12 +110,12 @@ void Control(void)
 	float error, deriv;
 	dt_recip = 1/pid.ts;
 	if(!f.ARMED){
-	  headFreeModeHold = imu.gyroYaw;
+	  headFreeModeHold = imu.actual_compass_heading;
 	}
 
 #if defined(HEADFREE)
   if(f.HEADFREE_MODE) { //to optimize
-    float radDiff = (imu.gyroYaw - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
+    float radDiff = (imu.actual_compass_heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
     float cosDiff = cos(radDiff);
     float sinDiff = sin(radDiff);
     int16_t rcCommand_PITCH = RC.rcCommand[PITCH]*cosDiff + RC.rcCommand[ROLL]*sinDiff;
