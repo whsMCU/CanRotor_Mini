@@ -542,32 +542,32 @@ void SendTelemetry(void){
   }
   if (telemetry_loop_counter == 13){
     headSerial(0, 4, TELEMERY_PID_RP_P);
-    serialize32(pid.kp[0]);
+    serialize32(pid.kp[ROLL]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 14){
     headSerial(0, 4, TELEMERY_PID_RP_I);
-    serialize32(pid.ki[0]);
+    serialize32(pid.ki[ROLL]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 15){
     headSerial(0, 4, TELEMERY_PID_RP_D);
-    serialize32(pid.kd[0]);
+    serialize32(pid.kd[ROLL]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 16){
     headSerial(0, 4, TELEMERY_PID_Y_P);
-    serialize32(pid.kd[2]);
+    serialize32(pid.kp[YAW]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 17){
     headSerial(0, 4, TELEMERY_PID_Y_I);
-    serialize32(pid.kd[2]);
+    serialize32(pid.ki[YAW]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 18){
     headSerial(0, 4, TELEMERY_PID_Y_D);
-    serialize32(pid.kd[2]);
+    serialize32(pid.kd[YAW]*10);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 19){

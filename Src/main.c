@@ -275,8 +275,8 @@ int main(void)
         //PrintData(3);   //GPS Data
        // PrintData(10);
       //  PrintData(1);
-        PrintData(5);   //All Data Out Put
-    //   PrintData(6);   //PID Tune
+    //    PrintData(5);   //All Data Out Put
+       PrintData(6);   //PID Tune
 
       flight_mode_signal();
       #ifdef BLE_Recive
