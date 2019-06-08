@@ -1,3 +1,3 @@
 PID.c:21:6:PIDControlInit	8	static
-PID.c:107:6:Control	56	static
-PID.c:258:5:constrain	0	static
+PID.c:107:6:Control	48	static
+PID.c:260:5:constrain	0	static

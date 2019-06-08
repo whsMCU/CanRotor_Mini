@@ -69,7 +69,7 @@ void TX2_CHR(char ch){
 ///////////////////////////////////////////////////
 void serialize8(uint8_t a)
 {
-    TX_CHR(a);
+    TX2_CHR(a);
     currentPortState->checksum ^= a;
 }
 
@@ -340,16 +340,16 @@ void SerialCom(void) {
 	 switch(currentPortState->cmdMSP){
 		 case MSP_ARM:
 			 mwArm();
-		 sprintf(Buf, "LOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
-    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
-		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//		 sprintf(Buf, "LOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
+//    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
+//		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 			 break;
 		 
 		 case MSP_DISARM:
 			 mwDisarm();
-				sprintf(Buf, "UNLOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
-    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
-		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//				sprintf(Buf, "UNLOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
+//    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
+//		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 			 break;
 		 
 		 case MSP_RC_RAW:
@@ -464,10 +464,53 @@ void SerialCom(void) {
     		HAL_UART_Transmit_IT(&huart1, (uint8_t*)Buf, strlen(Buf));
 			 break;
 		 
-		 case MSP_RAW_GPS:
+		 case TELEMERY_PIDSET_RP_P:
+		   pid.kp[ROLL] = read32();
+		   pid.kp[ROLL]/=10;
+		   pid.kp[PITCH] = pid.kp[ROLL];
+			 break;
+
+	    case TELEMERY_PIDSET_RP_I:
+	     pid.ki[ROLL] = read32();
+	     pid.ki[ROLL]/=10;
+	     pid.ki[PITCH] = pid.ki[ROLL];
+	     break;
+
+	    case TELEMERY_PIDSET_RP_D:
+	     pid.kd[ROLL] = read32();
+	     pid.kd[ROLL]/=10;
+	     pid.kd[PITCH] = pid.kd[ROLL];
+	     break;
+
+	    case TELEMERY_PIDSET_Y_P:
+	     pid.kp[YAW] = read32();
+	     pid.kp[YAW]/=10;
+	     break;
+
+	    case TELEMERY_PIDSET_Y_I:
+	     pid.ki[YAW] = read32();
+	     pid.ki[YAW]/=10;
+	     break;
+
+	    case TELEMERY_PIDSET_Y_D:
+	     pid.kd[YAW] = read32();
+	     pid.kd[YAW]/=10;
+	     break;
+
+	    case TELEMERY_PID_SAVE:
+	      RGB_B_TOGGLE;
+	      for(int i = 0; i < 3; i++){
+	        writeFloat( 0+(4*i), pid.kp[i]);
+	        writeFloat(12+(4*i), pid.ki[i]);
+	        writeFloat(24+(4*i), pid.kd[i]);
+	      }
+	     break;
+
+     case MSP_RAW_GPS:
 //          GPSValues result = p.evalGPS(inBuf);
 //          logger.logGPS(result);
-			 break;
+       break;
+
 
 		 default:
 		   //headSerialError();

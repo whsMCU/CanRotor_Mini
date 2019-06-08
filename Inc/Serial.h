@@ -113,4 +113,12 @@ typedef enum serialState_t {
 #define TELEMERY_GPS_LAT          21
 #define TELEMERY_GPS_LON          22
 
+#define TELEMERY_PIDSET_RP_P      50
+#define TELEMERY_PIDSET_RP_I      51
+#define TELEMERY_PIDSET_RP_D      52
+#define TELEMERY_PIDSET_Y_P       53
+#define TELEMERY_PIDSET_Y_I       54
+#define TELEMERY_PIDSET_Y_D       55
+#define TELEMERY_PID_SAVE         56
+
 #endif

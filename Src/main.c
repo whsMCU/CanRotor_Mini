@@ -241,46 +241,46 @@ int main(void)
     /* USER CODE END WHILE */
     LED0_TOGGLE; //RED
 
-        #ifdef DEVO7_Recive
-        computeRC();
-        #endif
-        computeIMU();
-        static uint8_t taskOrder = 0;
-        switch (taskOrder){
-            case 0:
-               taskOrder++;
-               if(Baro_update() !=0) break;
-            case 1:
-              taskOrder++;
-               if(getEstimatedAltitude() !=0) break;
-            case 2:
-              taskOrder++;
-              #ifdef GPS_Recive
-              if(gps_parse() !=0) break;
-              #endif
-            case 3:
-              taskOrder = 0;
-              HAL_ADC_Start(&hadc1);
-               if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
-               {
-                 BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
-                 BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
-               }
-              break;
-         }
-        Control();
-        mixTable();
-        PwmWriteMotor();
+     #ifdef DEVO7_Recive
+      computeRC();
+     #endif
+     computeIMU();
+     static uint8_t taskOrder = 0;
+     switch (taskOrder){
+       case 0:
+         taskOrder++;
+         if(Baro_update() !=0) break;
+       case 1:
+         taskOrder++;
+         if(getEstimatedAltitude() !=0) break;
+       case 2:
+         taskOrder++;
+         #ifdef GPS_Recive
+           if(gps_parse() !=0) break;
+         #endif
+       case 3:
+         taskOrder = 0;
+         HAL_ADC_Start(&hadc1);
+         if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
+         {
+           BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
+           BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
+          }
+         break;
+      }
+      Control();
+      mixTable();
+      PwmWriteMotor();
 
         //PrintData(3);   //GPS Data
        // PrintData(10);
       //  PrintData(1);
     //    PrintData(5);   //All Data Out Put
-       PrintData(6);   //PID Tune
+     //  PrintData(6);   //PID Tune
 
       flight_mode_signal();
       #ifdef BLE_Recive
-      SerialCom();
+      //SerialCom();
       #endif
       #ifdef Telemetry
       SerialCom();
@@ -715,9 +715,9 @@ static void MX_USART1_UART_Init(void)
 #ifdef GPS_Recive
   huart1.Init.BaudRate = 57600;//57600
 #endif
-#ifdef Telemetry
-  huart1.Init.BaudRate = 57600;//57600
-#endif
+//#ifdef Telemetry
+//  huart1.Init.BaudRate = 57600;//57600
+//#endif
 #ifdef BLE_Recive
 huart1.Init.BaudRate = 115200;//115200
 #endif

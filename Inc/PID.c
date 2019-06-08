@@ -7,8 +7,8 @@ float dt_recip;
 // Configure PID
 #define OUT_MAX	    	 800			// Out PID maximum 250
 #define OUT_MAX_Y		 800			// Out PID maximum 250
-#define I_MAX	         200			// Out I_term maximum 100
-#define I_MAX_Y			 200			// Out I_term maximum 100
+#define I_MAX	         300			// Out I_term maximum 100
+#define I_MAX_Y			 300			// Out I_term maximum 100
 #define DIR				 1				// Direct PID Direction 1
 /* AHRS/IMU structure */
 extern TM_AHRSIMU_t AHRSIMU;
@@ -149,11 +149,11 @@ void Control(void)
 		#endif
 		
 #ifdef PID_NORMAL
-	  pid.error[ROLL] = RC.rcCommand[ROLL] - imu.Roll;
+	  pid.error[ROLL] = RC.rcCommand[ROLL] - imu.AHRS[ROLL];
 	  pid.Iterm[ROLL] += pid.ki[ROLL] * pid.error[ROLL] * pid.ts;
 	  if(pid.Iterm[ROLL] > I_MAX) pid.Iterm[ROLL] = I_MAX;
 	  else if(pid.Iterm[ROLL] < -I_MAX) pid.Iterm[ROLL] = -I_MAX;
-	  pid.dInput[ROLL] = (imu.Roll - pid.lastInput[ROLL])  / pid.ts;
+	  pid.dInput[ROLL] = (imu.AHRS[ROLL] - pid.lastInput[ROLL])  / pid.ts;
 
 	  /*Compute PID Output*/
 	  pid.output2[ROLL] = pid.kp[ROLL] * pid.error[ROLL] + pid.Iterm[ROLL] - pid.kd[ROLL] * pid.dInput[ROLL];
@@ -162,16 +162,16 @@ void Control(void)
 	  else if(pid.output2[ROLL] < -OUT_MAX) pid.output2[ROLL] = -OUT_MAX;
 
 	  /*Remember some variables for next time*/
-	  pid.lastInput[ROLL] = imu.Roll;
+	  pid.lastInput[ROLL] = imu.AHRS[ROLL];
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 	  /*Compute all the working error variables*/
-	  pid.error[PITCH] = RC.rcCommand[PITCH] - imu.Pitch;
+	  pid.error[PITCH] = RC.rcCommand[PITCH] - imu.AHRS[PITCH];
 	  pid.Iterm[PITCH] += pid.ki[PITCH] * pid.error[PITCH] * pid.ts;
 	  if(pid.Iterm[PITCH] > I_MAX) pid.Iterm[PITCH] = I_MAX;
 	  else if(pid.Iterm[PITCH] < -I_MAX) pid.Iterm[PITCH] = -I_MAX;
-	  pid.dInput[PITCH] = (imu.Pitch - pid.lastInput[PITCH]) / pid.ts;
+	  pid.dInput[PITCH] = (imu.AHRS[PITCH] - pid.lastInput[PITCH]) / pid.ts;
 
 	  /*Compute PID Output*/
 	  pid.output2[PITCH] = pid.kp[PITCH] * pid.error[PITCH] + pid.Iterm[PITCH] - pid.kd[PITCH] * pid.dInput[PITCH];
@@ -180,7 +180,7 @@ void Control(void)
 	  else if(pid.output2[PITCH] < -OUT_MAX) pid.output2[PITCH] = -OUT_MAX;
 
 	  /*Remember some variables for next time*/
-	  pid.lastInput[PITCH] = imu.Pitch;
+	  pid.lastInput[PITCH] = imu.AHRS[PITCH];
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -200,6 +200,7 @@ void Control(void)
 	  /*Remember some variables for next time*/
 	  pid.lastInput[YAW] = imu.gyroYaw;//imu.Yaw
 #endif
+#ifdef Recive_PID_CHANGE
 	  if(f.Tuning_MODE == 1){
 	    RGB_G_TOGGLE;
 	    f.Write_MODE = 1;
@@ -253,6 +254,7 @@ void Control(void)
 	      RGB_B_OFF;
 	    }
 	  }
+#endif
 }
 
 int constrain(int amt, int low, int high)

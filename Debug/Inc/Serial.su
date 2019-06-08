@@ -19,4 +19,4 @@ Serial.c:153:6:s_struct	16	static
 Serial.c:160:6:PrintData	120	static
 Serial.c:337:7:evaluateCommand	48	static
 Serial.c:284:6:SerialCom	48	static
-Serial.c:480:6:SendTelemetry	8	static
+Serial.c:523:6:SendTelemetry	8	static

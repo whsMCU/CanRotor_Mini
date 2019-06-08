@@ -12,6 +12,8 @@
 
 #define HEADFREE
 
+//#define Recive_PID_CHANGE
+
 #define QUAD_X
 //#define QUAD_P
 
@@ -19,7 +21,7 @@
 
 //#define GPS_Recive
 //#define DEVO7_Recive
-//#define BLE_Recive
+#define BLE_Recive
 #define Telemetry
 //#define SSD1306
 
