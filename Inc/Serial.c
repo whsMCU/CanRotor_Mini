@@ -38,7 +38,7 @@ int fputc(int ch, FILE *f) // for printf
 {
    uint8_t tmp[1]={ch};
    HAL_UART_Transmit(&huart2, tmp, 1, 1);
-	 //HAL_UART_Transmit_DMA(&huart2, tmp, 1);
+	 //HAL_UART_Transmit_DMA(&huart1, tmp, 1);
    return(ch);
 }
 
@@ -185,7 +185,7 @@ void PrintData(uint8_t command)
 
 	case 0:
 		sprintf(Buf, "[1]9250 [3]Radio [4]Motor [5]Angle [6]PID [9]IMU [p]Kp [i]Ki [d]Kd [q,w,e] [z,x,c] \r\n ");
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 
@@ -193,13 +193,13 @@ void PrintData(uint8_t command)
 	case 1:
 	     sprintf(Buf, " acc (%4.2f), (%4.2f), (%4.2f) / gyro (%4.2f), (%4.2f), (%4.2f) / mag (%3.f), (%3.f), (%3.f) / AHRS:(%4.f)(%4.f)(%4.f), (%4.2f) \r\n",
 	                    imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, imu.AHRS[YAW]);
-	     HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 	     break;
 
 	case 2:
 		sprintf(Buf, " gyroBias_x: (%3.2f), gyroBias_y: (%3.2f), gyroBias_z: (%3.2f)\r\n",
                  	imu.gyro_cal[ROLL], imu.gyro_cal[PITCH], imu.gyro_cal[YAW]);
-			HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+			HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
 	    break;
 
@@ -208,12 +208,12 @@ void PrintData(uint8_t command)
 	  //        GPS.latitudeDegrees, GPS.lat, GPS.longitudeDegrees, GPS.lon, GPS.fixquality, GPS.satellites, GPS.altitude, GPS.geoidheight);
 	  sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, angle : %.2f, Error : %d\n",
 	          GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.angle, GPS.error);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
 
 	case 4:
 		sprintf(Buf, " %d %d %d %d\r\n", motor[0], motor[1], motor[2], motor[3]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
 //		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
@@ -225,57 +225,57 @@ void PrintData(uint8_t command)
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
 //            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
     //sprintf(Buf,"Hour: %d, minute : %d, second : %d, milliseconds : %d\n", GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 	//HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 6:
     sprintf(Buf,"R[P]: %2.2f, P[P]: %2.2f, R[I]: %2.2f, P[I]: %2.2f, R[D]: %2.2f, P[D]: %2.2f, Y[P]: %2.2f, Y[I]: %2.2f, Y[D]: %2.2f, ARMED: (%d), Tuning : (%d)\r\n",
             pid.kp[ROLL], pid.kp[PITCH], pid.ki[ROLL], pid.ki[PITCH], pid.kd[ROLL], pid.kd[PITCH], pid.kp[YAW], pid.ki[YAW], pid.kd[YAW], f.ARMED, f.Tuning_MODE);
-    HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+    HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
 	case 7:
 		  sprintf(Buf, " state: %d, data: %d \n ", hdma_usart1_rx.State, rx1_buffer[0]);
-		  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		  HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		  //HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 8:
 		sprintf(Buf, "%f %f %f\r\n",pid.output2[ROLL], pid.output2[PITCH], pid.output2[YAW]);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
 		break;
 	case 9:
 		sprintf(Buf, "Roll:(%.2f), Pitch:(%.2f), Yaw:(%.2f), rx_buffer:(%d)\r\n",AHRSIMU.Roll, AHRSIMU.Pitch, AHRSIMU.Yaw, rx1_buffer[0]);
-	     HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 	     //HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 
 	case 10:
 		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", l_t, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt, f.ARMED);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 
 		break;
 
      case 11:
 			sprintf(Buf, "\r\n [KP]: %.2f, %.2f, %.2f \r\n ", pid.kp[0], pid.kp[1], pid.kp[2]);
-			HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+			HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 			//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 
 	case 12:
 			sprintf(Buf, "\r\n [KI]: %.2f, %.2f, %.2f\r\n", pid.ki[0], pid.ki[1], pid.ki[2]);
-			HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+			HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 			//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 
 	case 13:
 			sprintf(Buf, "\r\n [KD]: %.2f, %.2f, %.2f\r\n", pid.kd[0], pid.kd[1], pid.kd[2]);
-			HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+			HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 			//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 14:
 		sprintf(Buf,"R/P/Y: %f %f %f\r\n",AHRSIMU.Roll, AHRSIMU.Pitch, AHRSIMU.Yaw);
-	     HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
 	 }
   }
@@ -287,7 +287,7 @@ void SerialCom(void) {
     currentPortState = &ports[i];
 //			printf("port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
 //	    sprintf(Buf,"port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
-//	    HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+//	    HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 
     while(QueueAvailable(&Q_buffer[i]) > 0){
 	  c = read_Q(&Q_buffer[i]);
@@ -342,14 +342,14 @@ void SerialCom(void) {
 			 mwArm();
 //		 sprintf(Buf, "LOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
 //    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
-//		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//		 HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 			 break;
 		 
 		 case MSP_DISARM:
 			 mwDisarm();
 //				sprintf(Buf, "UNLOCK : %d, %d, %d, %d, %d, ARMD : %d\r\n ", currentPortState->inBuf[0], currentPortState->inBuf[1], currentPortState->inBuf[2], currentPortState->inBuf[3], currentPortState->inBuf[4], f.ARMED);
 //    		//HAL_UART_Transmit_IT(&huart2, (uint8_t*)Buf, strlen(Buf));
-//		 HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//		 HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 			 break;
 		 
 		 case MSP_RC_RAW:
@@ -390,7 +390,7 @@ void SerialCom(void) {
 //	       break;
 //	     }
 //        sprintf(Buf, "IMU : %d, %d, %d\r\n ", currentPortState->dataSize, currentPortState->cmdMSP, currentPortState->checksum);
-//        HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 				headSerialReply(12);
 			  for (i = 0; i < 3; i++)
 				  serialize32(imu.AHRS[i]+400);

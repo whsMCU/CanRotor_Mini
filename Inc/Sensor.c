@@ -888,7 +888,7 @@ uint8_t getEstimatedAltitude(void)
   ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
 
   alt.EstAlt = (alt.EstAlt * 6 + ms5611.BaroAlt ) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
-
+  if(alt.EstAlt < 0) alt.EstAlt = 0;
   return 1;
 }
 uint32_t readRawTemperature(void)

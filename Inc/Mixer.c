@@ -72,4 +72,23 @@ void mixTable(void)
 					pid.Iterm2[i] = 0;
 				}
 			}
+  #ifdef VOLTAGEDROP_COMPENSATION
+    #if (VBATNOMINAL == 42) // 1S
+      #define GOV_R_NUM 12
+			static int8_t g[] = { 0,4,10,17,25,34,44,55,67,80,94,109,126 };
+    #elif (VBATNOMINAL == 126) // 3S
+      #define GOV_R_NUM 36
+			static int8_t g[] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
+    #endif
+
+    uint8_t v = constrain( VBATNOMINAL - constrain(BAT.VBAT, VBATLEVEL_CRIT, VBATNOMINAL), 0, GOV_R_NUM);
+    for (i = 0; i < 4; i++) {
+      #ifdef MOTOR_DC
+        motor[i] += ( ( (int32_t)(motor[i]) * (int32_t)g[v] ) )/ 500;
+      #elif MOTOR_ESC
+        motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) )/ 500;
+      #endif
+    }
+
+  #endif
 }

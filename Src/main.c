@@ -84,7 +84,6 @@ extern TM_AHRSIMU_t AHRSIMU;
 bat_t BAT;
 eeror_t Error;
 extern pidc_t pid;
-extern ms5611_t ms5611;
 
 extern uint8_t rx1_buffer[1];
 extern uint8_t rx2_buffer[1];
@@ -153,14 +152,14 @@ int main(void)
   MX_DMA_Init();
   MX_I2C2_Init();  //IMU
   MX_TIM4_Init();  // Motor
-  MX_USART1_UART_Init(); //BLUETU, GPS
+  MX_USART1_UART_Init(); //BLUETU, GPS, cp2102
   MX_USART2_UART_Init(); //tele
   MX_ADC1_Init();
   MX_TIM3_Init(); //Radio
   MX_TIM2_Init(); //Radio
   /* USER CODE BEGIN 2 */
   LED1_ON;
-   LED0_OFF;
+  LED0_OFF;
   for (int i = 0; i < 10; i++) {
        LED1_TOGGLE;
        LED0_TOGGLE;
@@ -260,12 +259,20 @@ int main(void)
          #endif
        case 3:
          taskOrder = 0;
+         static uint8_t ind = 0;
+         static uint16_t vvec[VBAT_SMOOTH], vsum;
          HAL_ADC_Start(&hadc1);
          if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
          {
            BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
            BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
           }
+         vsum += BAT.VBAT;
+         vsum -= vvec[ind];
+         vvec[ind++] = BAT.VBAT;
+         ind %= VBAT_SMOOTH;
+
+         BAT.VBAT = vsum/VBAT_SMOOTH;
          break;
       }
       Control();
@@ -291,7 +298,7 @@ int main(void)
 //          aftertime = micros();
 //           time1 = aftertime - time;
 //           sprintf(Buf, "count : %d, time : %d\r\n ",telemetry_loop_counter, time1);
-//           HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+//           HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
       while((int16_t)(micros()-timeInterleave)<1500) t=1; //650
       if(!t) overrun_count++;
       #endif
@@ -715,9 +722,6 @@ static void MX_USART1_UART_Init(void)
 #ifdef GPS_Recive
   huart1.Init.BaudRate = 57600;//57600
 #endif
-//#ifdef Telemetry
-//  huart1.Init.BaudRate = 57600;//57600
-//#endif
 #ifdef BLE_Recive
 huart1.Init.BaudRate = 115200;//115200
 #endif
