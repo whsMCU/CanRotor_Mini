@@ -114,15 +114,15 @@ void mwArm(void)
 {
 	if(!f.ARMED){
 		f.ARMED = 1;
-		f.Tuning_MODE = 0;
-		ms5611.ground_pressure = ms5611.avg_realPressure;
+//		f.Tuning_MODE = 0;
+		ms5611.ground_pressure = alt.EstAlt;
 	}
 }
 void mwDisarm(void)
 {
-  if(!f.ARMED){
-    f.Tuning_MODE = (f.Tuning_MODE+1) % 3;
-  }
+//  if(!f.ARMED){
+//    f.Tuning_MODE = (f.Tuning_MODE+1) % 3;
+//  }
 	if(f.ARMED){
 		f.ARMED = 0;
 	}
@@ -180,7 +180,6 @@ void computeRC(void)
 			   mwArm();
        }else if(rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_LO)
        {
-         RGB_R_TOGGLE;
          mwDisarm();
        }
 				 if (i) {

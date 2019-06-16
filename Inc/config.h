@@ -29,10 +29,10 @@
   /**********************************  constant loop time  ******************************/
     #define LOOP_TIME 4000
 
-    #define VOLTAGEDROP_COMPENSATION
-    #define VBATLEVEL_WARN1 37
-    #define VBATLEVEL_WARN2 35
-    #define VBATLEVEL_CRIT 33
+//    #define VOLTAGEDROP_COMPENSATION
+    #define VBATLEVEL_WARN1 35
+    #define VBATLEVEL_WARN2 33
+    #define VBATLEVEL_CRIT 30
     #define VBATNOMINAL 42
     #define VBAT_SMOOTH 8              // len of averaging vector for smoothing the VBAT readings; should be power of 2; set to 1 to disable
 

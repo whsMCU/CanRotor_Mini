@@ -52,6 +52,8 @@ void mixerInit(void)
 		}
 }
 
+test_t test;
+
 void mixTable(void)
 {
 	uint8_t i = 0;
@@ -59,19 +61,6 @@ void mixTable(void)
 			for (i = 0; i < 4; i++){
 				motor[i] = (RC.rcCommand[THROTTLE] * currentMixer[i].THROTTLE) + (pid.output2[ROLL] * currentMixer[i].ROLL) + (pid.output2[PITCH] * currentMixer[i].PITCH) + ((1 * pid.output2[YAW]) * currentMixer[i].YAW);
 				
-				if(motor[i]<0) motor[i] = 0;
-				if(motor[i] > 2000) motor[i] = 2000;
-	
-				if(RC.rcCommand[THROTTLE] < 200 || f.ARMED == 0)
-				{
-					motor[i] = 0;
-					pid.output1[i] = 0;
-					pid.output2[i] = 0;
-					pid.Iterm[i] = 0;
-					pid.Iterm1[i] = 0;
-					pid.Iterm2[i] = 0;
-				}
-			}
   #ifdef VOLTAGEDROP_COMPENSATION
     #if (VBATNOMINAL == 42) // 1S
       #define GOV_R_NUM 12
@@ -80,15 +69,26 @@ void mixTable(void)
       #define GOV_R_NUM 36
 			static int8_t g[] = { 0,3,5,8,11,14,17,19,22,25,28,31,34,38,41,44,47,51,54,58,61,65,68,72,76,79,83,87,91,95,99,104,108,112,117,121,126 };
     #endif
-
-    uint8_t v = constrain( VBATNOMINAL - constrain(BAT.VBAT, VBATLEVEL_CRIT, VBATNOMINAL), 0, GOV_R_NUM);
-    for (i = 0; i < 4; i++) {
+		uint8_t v = constrain( VBATNOMINAL - constrain(BAT.VBAT, VBATLEVEL_CRIT, VBATNOMINAL), 0, GOV_R_NUM);
+		for (i = 0; i < 4; i++) {
       #ifdef MOTOR_DC
         motor[i] += ( ( (int32_t)(motor[i]) * (int32_t)g[v] ) )/ 500;
       #elif MOTOR_ESC
         motor[i] += ( ( (int32_t)(motor[i]-1000) * (int32_t)g[v] ) )/ 500;
       #endif
-    }
-
+		}
   #endif
+
+	if(motor[i] <    0) motor[i] = 0;
+	if(motor[i] > 2000) motor[i] = 2000;
+
+	if(RC.rcCommand[THROTTLE] < 200 || f.ARMED == 0){
+		motor[i] = 0;
+		pid.output1[i] = 0;
+		pid.output2[i] = 0;
+		pid.Iterm[i] = 0;
+		pid.Iterm1[i] = 0;
+		pid.Iterm2[i] = 0;
+	}
+	}
 }

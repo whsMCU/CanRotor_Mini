@@ -70,7 +70,7 @@ void TX2_CHR(char ch){
 void serialize8(uint8_t a)
 {
     TX2_CHR(a);
-    currentPortState->checksum ^= a;
+    currentPortState->checksum ^= (a & 0xFF);
 }
 
 void serialize16(int16_t a)
@@ -193,6 +193,7 @@ void PrintData(uint8_t command)
 	case 1:
 	     sprintf(Buf, " acc (%4.2f), (%4.2f), (%4.2f) / gyro (%4.2f), (%4.2f), (%4.2f) / mag (%3.f), (%3.f), (%3.f) / AHRS:(%4.f)(%4.f)(%4.f), (%4.2f) \r\n",
 	                    imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, imu.AHRS[YAW]);
+//	  sprintf(Buf, " %.0f,%.0f,%.0f,%.0f.",imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW],imu.actual_compass_heading);
 	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 	     break;
 
@@ -216,10 +217,10 @@ void PrintData(uint8_t command)
 		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
-//		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d) \r\n",
-//	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE);
-	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, %d, %d, error : %d, %d, %3.1f, %3.1f\r\n",
-	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW]);
+		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d), %d \r\n",
+	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE, test.VBAT_Compensat1);
+//	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, %d, %d, error : %d, %d, %3.1f, %3.1f, %d\r\n",
+//	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW], test.VBAT_Compensat1);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
@@ -251,7 +252,7 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", l_t, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt, f.ARMED);
+		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", loopTime, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt, f.ARMED);
 		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 
 		break;
@@ -420,13 +421,14 @@ void SerialCom(void) {
        break;			
 				
 		 case MSP_SET_PID:
+		   RGB_G_TOGGLE;
 			 	for(i=0; i < 3; i++){
-				 pid.kp[i] = read32();
-				 pid.kp[i]/=10;
-				 pid.ki[i] = read32();
-				 pid.ki[i]/=10;
-				 pid.kd[i] = read32();
-				 pid.kd[i]/=10;
+				 pid.kp[i] = read8();
+				 //pid.kp[i]/=10;
+				 pid.ki[i] = read8();
+				 //pid.ki[i]/=10;
+				 pid.kd[i] = read8();
+				 //pid.kd[i]/=10;
 				}
         //headSerialReply(0);
        break;
@@ -539,13 +541,13 @@ void SendTelemetry(void){
     tailSerialReply();
   }
   if (telemetry_loop_counter == 4){
-    headSerial(0, 2, TELEMERY_CYCLE_TIME);
-    serialize16((uint16_t)cycleTime);
+    headSerial(0, 4, TELEMERY_CYCLE_TIME);
+    serialize32(loopTime);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 5){
     headSerial(0, 4, TELEMERY_BAT_VOLT);
-    serialize32(BAT.VBAT*10);
+    serialize32(BAT.VBAT);
     tailSerialReply();
   }
   if (telemetry_loop_counter == 6){
@@ -573,65 +575,164 @@ void SendTelemetry(void){
     serialize32(imu.actual_compass_heading);
     tailSerialReply();
   }
+
   if (telemetry_loop_counter == 11){
+    headSerial(0, 4, TELEMERY_ACC_ROLL);
+
+    serialize32((float)map(imu.accADC[ROLL], -32768, 32768, -1000, 1000)+1000);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 12){
+    headSerial(0, 4, TELEMERY_ACC_PITCH);
+    serialize32((float)map(imu.accADC[PITCH], -32768, 32768, -1000, 1000)+1000);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 13){
+    headSerial(0, 4, TELEMERY_ACC_YAW);
+    serialize32((float)map(imu.accADC[YAW], -32768, 32768, -1000, 1000)+1000);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 14){
+    headSerial(0, 4, TELEMERY_GYRO_ROLL);
+    serialize32(imu.gyroRaw[ROLL]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 15){
+    headSerial(0, 4, TELEMERY_GYRO_PITCH);
+    serialize32(imu.gyroRaw[PITCH]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 16){
+    headSerial(0, 4, TELEMERY_GYRO_YAW);
+    serialize32(imu.gyroRaw[YAW]+400);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 17){
+    headSerial(0, 4, TELEMERY_MAG_ROLL);
+    serialize32(imu.magRaw[ROLL]+1000);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 18){
+    headSerial(0, 4, TELEMERY_MAG_PITCH);
+    serialize32(imu.magRaw[PITCH]+1000);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 19){
+    headSerial(0, 4, TELEMERY_MAG_YAW);
+    serialize32(imu.magRaw[YAW]+1000);
+    tailSerialReply();
+  }
+
+  if (telemetry_loop_counter == 20){
     headSerial(0, 4, TELEMERY_ARMD_TIME);
     serialize32(armedTime);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 12){
+  if (telemetry_loop_counter == 21){
     headSerial(0, 4, TELEMERY_BARO_EST);
     serialize32(ms5611.altitude_ref_ground);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 13){
+  if (telemetry_loop_counter == 22){
     headSerial(0, 4, TELEMERY_PID_RP_P);
     serialize32(pid.kp[ROLL]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 14){
+  if (telemetry_loop_counter == 23){
     headSerial(0, 4, TELEMERY_PID_RP_I);
     serialize32(pid.ki[ROLL]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 15){
+  if (telemetry_loop_counter == 24){
     headSerial(0, 4, TELEMERY_PID_RP_D);
     serialize32(pid.kd[ROLL]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 16){
+  if (telemetry_loop_counter == 25){
     headSerial(0, 4, TELEMERY_PID_Y_P);
     serialize32(pid.kp[YAW]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 17){
+  if (telemetry_loop_counter == 26){
     headSerial(0, 4, TELEMERY_PID_Y_I);
     serialize32(pid.ki[YAW]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 18){
+  if (telemetry_loop_counter == 27){
     headSerial(0, 4, TELEMERY_PID_Y_D);
     serialize32(pid.kd[YAW]*10);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 19){
+  if (telemetry_loop_counter == 28){
     headSerial(0, 1, TELEMERY_NUM_SATS);
     serialize8(GPS.satellites);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 20){
+  if (telemetry_loop_counter == 29){
     headSerial(0, 1, TELEMERY_FIX_TYPE);
     serialize8(GPS.fixquality);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 21){
+  if (telemetry_loop_counter == 30){
     headSerial(0, 4, TELEMERY_GPS_LAT);
     serialize32(GPS.latitudeDegrees);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 22){
+  if (telemetry_loop_counter == 31){
     headSerial(0, 4, TELEMERY_GPS_LON);
     serialize32(GPS.longitudeDegrees);
     tailSerialReply();
   }
-  if (telemetry_loop_counter == 50) telemetry_loop_counter = 0;
+  if (telemetry_loop_counter == 32){
+    headSerial(0, 2, TELEMERY_RADIO_ROLL);
+    serialize16(RC.rcCommand[ROLL]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 33){
+    headSerial(0, 2, TELEMERY_RADIO_PITCH);
+    serialize16(RC.rcCommand[PITCH]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 34){
+    headSerial(0, 2, TELEMERY_RADIO_YAW);
+    serialize16(RC.rcCommand[YAW]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 35){
+    headSerial(0, 2, TELEMERY_RADIO_THROTTLE);
+    serialize16(RC.rcCommand[THROTTLE]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 36){
+    headSerial(0, 2, TELEMERY_RADIO_GEAR);
+    serialize16(RC.rcCommand[GEAR]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 37){
+    headSerial(0, 2, TELEMERY_RADIO_AUX1);
+    serialize16(RC.rcCommand[AUX1]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 38){
+    headSerial(0, 2, TELEMERY_MOTOR_1);
+    serialize16(motor[0]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 39){
+    headSerial(0, 2, TELEMERY_MOTOR_2);
+    serialize16(motor[1]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 40){
+    headSerial(0, 2, TELEMERY_MOTOR_3);
+    serialize16(motor[2]);
+    tailSerialReply();
+  }
+  if (telemetry_loop_counter == 41){
+    headSerial(0, 2, TELEMERY_MOTOR_4);
+    serialize16(motor[3]);
+    tailSerialReply();
+  }
+
+  if (telemetry_loop_counter == 42) telemetry_loop_counter = 0;
 }

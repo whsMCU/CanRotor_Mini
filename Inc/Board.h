@@ -60,8 +60,9 @@ extern TM_AHRSIMU_t AHRSIMU;
 extern rc RC;
 extern rc RC_Raw;
 extern alt_t alt;
+extern test_t test;
 
-extern volatile uint32_t l_t, cycleTime, currentTime;
+extern volatile uint32_t loopTime, cycleTime, currentTime;
 extern int16_t overrun_count;
 extern uint32_t baroPressureSum;
 

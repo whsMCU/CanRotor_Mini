@@ -52,6 +52,11 @@ typedef struct eeror_t {
   uint32_t error_timer;
 } eeror_t;
 
+typedef struct test_t {
+  uint8_t VBAT_Compensat1;
+  uint8_t VBAT_Compensat2;
+} test_t;
+
 #define CALIBRATING_GYRO_CYCLES             1000
 #define CALIBRATING_ACC_CYCLES              400
 #define CALIBRATING_BARO_CYCLES             200

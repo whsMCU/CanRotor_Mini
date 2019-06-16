@@ -90,7 +90,7 @@ extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
 
-volatile uint32_t currentTime=0, cycleTime=0, previousTime=0, l_t = 0;
+volatile uint32_t currentTime=0, cycleTime=0, previousTime=0, loopTime = 0;
 
 uint16_t cycleTimeMax = 0;
 uint16_t cycleTimeMin = 65535;
@@ -125,8 +125,7 @@ static void MX_TIM3_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -265,7 +264,7 @@ int main(void)
          if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
          {
            BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
-           BAT.VBAT = (((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW;
+           BAT.VBAT = ((((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW)*10;
           }
          vsum += BAT.VBAT;
          vsum -= vvec[ind];
@@ -282,7 +281,7 @@ int main(void)
         //PrintData(3);   //GPS Data
        // PrintData(10);
       //  PrintData(1);
-    //    PrintData(5);   //All Data Out Put
+      //  PrintData(5);   //All Data Output
      //  PrintData(6);   //PID Tune
 
       flight_mode_signal();
@@ -302,7 +301,7 @@ int main(void)
       while((int16_t)(micros()-timeInterleave)<1500) t=1; //650
       if(!t) overrun_count++;
       #endif
-      l_t = micros() - previousTime;
+      loopTime = micros() - previousTime;
       while(1){
         currentTime = micros();
         cycleTime = currentTime - previousTime;
@@ -323,8 +322,8 @@ int main(void)
     if(f.ARMED){
       armedTime += (uint32_t)cycleTime;
     }
-    if(l_t > cycleTimeMax) cycleTimeMax = l_t;
-    if(l_t < cycleTimeMin) cycleTimeMin = l_t;
+    if(loopTime > cycleTimeMax) cycleTimeMax = loopTime;
+    if(loopTime < cycleTimeMin) cycleTimeMin = loopTime;
 
     /* USER CODE BEGIN 3 */
   }
@@ -719,6 +718,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
+  huart1.Init.BaudRate = 57600;
 #ifdef GPS_Recive
   huart1.Init.BaudRate = 57600;//57600
 #endif

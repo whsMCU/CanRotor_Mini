@@ -7,8 +7,8 @@ float dt_recip;
 // Configure PID
 #define OUT_MAX	    	 800			// Out PID maximum 250
 #define OUT_MAX_Y		 800			// Out PID maximum 250
-#define I_MAX	         300			// Out I_term maximum 100
-#define I_MAX_Y			 300			// Out I_term maximum 100
+#define I_MAX	         800			// Out I_term maximum 300v
+#define I_MAX_Y			 800			// Out I_term maximum 300
 #define DIR				 1				// Direct PID Direction 1
 /* AHRS/IMU structure */
 extern TM_AHRSIMU_t AHRSIMU;
