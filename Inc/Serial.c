@@ -399,19 +399,19 @@ void SerialCom(void) {
 			 break;
 
 	    case MSP_STATUS:
-	    { struct {
+	    	{ struct {
 	        uint16_t cycleTime;
 	        uint8_t mode, error, errors_count;
-	      } st;
-	      st.cycleTime    = cycleTime;
-	      st.mode         = f.ARMED;
-	      st.error        = Error.error;
-	      st.errors_count = Error.error_counter;
-	      s_struct((uint8_t*)&st,5);
-	      break;
-	    }
+	    	} st;
+	      	  st.cycleTime    = cycleTime;
+	      	  st.mode         = f.ARMED;
+	      	  st.error        = Error.error;
+	      	  st.errors_count = Error.error_counter;
+	      	  s_struct((uint8_t*)&st,5);
+	      	  break;
+	    	}
 		 case MSP_PID:
-			 	headSerialReply(36);
+			 headSerialReply(36);
 			  for (i = 0; i < 3; i++){
 				 serialize32(pid.kp[i]*10);
 				 serialize32(pid.ki[i]*10);
@@ -422,15 +422,18 @@ void SerialCom(void) {
 				
 		 case MSP_SET_PID:
 		   RGB_B_TOGGLE;
+	        headSerialReply(0);tailSerialReply();
+	        time1++;
+	        sprintf(Buf, "time : %d\r\n ", time1);
+	        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 			 	for(i=0; i < 3; i++){
-				 pid.kp[i] = (float) read8();
-				 pid.kp[i]/=10;
-				 pid.ki[i] = (float) read8();
-				 pid.ki[i]/=10;
-				 pid.kd[i] = (float) read8();
-				 pid.kd[i]/=10;
+				 pid.kp[i] = (float) read16();
+				 pid.kp[i] /= 10;
+				 pid.ki[i] = (float) read16();
+				 pid.ki[i] /= 10;
+				 pid.kd[i] = (float) read16();
+				 pid.kd[i] /= 10;
 				}
-        //headSerialReply(0);
        break;
 
 		 case MSP_ACC_CALIBRATION:
