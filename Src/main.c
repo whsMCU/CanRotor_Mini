@@ -242,13 +242,15 @@ int main(void){
      #ifdef DEVO7_Recive
       computeRC();
      #endif
-     computeIMU();
+
+     computeIMU(); //1050~1500us
+
      static uint8_t taskOrder = 0;
-     switch (taskOrder){
-       case 0:
+     switch (taskOrder){ //4~206us
+       case 0: //200us
          taskOrder++;
          if(Baro_update() !=0) break;
-       case 1:
+       case 1:  //80us
          taskOrder++;
          if(getEstimatedAltitude() !=0) break;
        case 2:
@@ -256,7 +258,8 @@ int main(void){
          #ifdef GPS_Recive
            if(gps_parse() !=0) break;
          #endif
-       case 3:
+       case 3:  //15us
+         time = micros();
          taskOrder = 0;
          static uint8_t ind = 0;
          static uint16_t vvec[VBAT_SMOOTH], vsum;
@@ -270,10 +273,10 @@ int main(void){
          vsum -= vvec[ind];
          vvec[ind++] = BAT.VBAT;
          ind %= VBAT_SMOOTH;
-
          BAT.VBAT = vsum/VBAT_SMOOTH;
          break;
       }
+
       Control();
       mixTable();
       PwmWriteMotor();
@@ -289,7 +292,7 @@ int main(void){
       //SerialCom();
       #endif
       #ifdef Telemetry
-      SerialCom();
+      SerialCom(); //4us
       uint8_t t=0;
       timeInterleave = micros();
 //          time = micros();

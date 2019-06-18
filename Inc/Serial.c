@@ -217,10 +217,10 @@ void PrintData(uint8_t command)
 		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 5:
-		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d), %d \r\n",
-	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE, test.VBAT_Compensat1);
-//	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, %d, %d, error : %d, %d, %3.1f, %3.1f, %d\r\n",
-//	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW], test.VBAT_Compensat1);
+//		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d), %d \r\n",
+//	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE, test.VBAT_Compensat1);
+	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, %d, %d, error : %d, %d, %3.1f, %3.1f, %d\r\n",
+	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW], test.VBAT_Compensat1);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
@@ -421,14 +421,14 @@ void SerialCom(void) {
        break;			
 				
 		 case MSP_SET_PID:
-		   RGB_G_TOGGLE;
+		   RGB_B_TOGGLE;
 			 	for(i=0; i < 3; i++){
-				 pid.kp[i] = read8();
-				 //pid.kp[i]/=10;
-				 pid.ki[i] = read8();
-				 //pid.ki[i]/=10;
-				 pid.kd[i] = read8();
-				 //pid.kd[i]/=10;
+				 pid.kp[i] = (float) read8();
+				 pid.kp[i]/=10;
+				 pid.ki[i] = (float) read8();
+				 pid.ki[i]/=10;
+				 pid.kd[i] = (float) read8();
+				 pid.kd[i]/=10;
 				}
         //headSerialReply(0);
        break;
@@ -578,7 +578,6 @@ void SendTelemetry(void){
 
   if (telemetry_loop_counter == 11){
     headSerial(0, 4, TELEMERY_ACC_ROLL);
-
     serialize32((float)map(imu.accADC[ROLL], -32768, 32768, -1000, 1000)+1000);
     tailSerialReply();
   }
