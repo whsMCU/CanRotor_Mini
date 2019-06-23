@@ -61,6 +61,7 @@ extern rc RC;
 extern rc RC_Raw;
 extern alt_t alt;
 extern test_t test;
+extern att_t att;
 
 extern volatile uint32_t loopTime, cycleTime, currentTime;
 extern int16_t overrun_count;

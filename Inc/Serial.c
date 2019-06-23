@@ -13,12 +13,12 @@ uint16_t time=0, time1=0, aftertime=0;
 
 ////////////////////////////////////////////
 
-volatile uint8_t rx1_buffer[16];
-volatile uint8_t rx2_buffer[16];
+uint8_t rx1_buffer[1];
+uint8_t rx2_buffer[1];
 
 //////////// MSP //////////////////
 #define INBUF_SIZE 128
-typedef  struct mspPortState_t {
+typedef struct mspPortState_t {
 //    serialPort_t *port;
     uint8_t checksum;
     uint8_t indRX;
@@ -37,7 +37,7 @@ static mspPortState_t *currentPortState = &ports[0];
 int fputc(int ch, FILE *f) // for printf
 {
    uint8_t tmp[1]={ch};
-   HAL_UART_Transmit(&huart2, tmp, 1, 1);
+   HAL_UART_Transmit(&huart1, tmp, 1, 1);
 	 //HAL_UART_Transmit_DMA(&huart1, tmp, 1);
    return(ch);
 }
@@ -53,6 +53,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart->Instance == USART2) //current USART
 		{
 			write_Q(&Q_buffer[UART2], rx2_buffer[0]);
+			//printf("c %d",rx2_buffer[0]);
+			//HAL_UART_Transmit_IT(&huart1, (uint8_t*)rx2_buffer, 100);
+			//TX_CHR(rx2_buffer[0]);
 		}
 }
 
@@ -227,7 +230,7 @@ void PrintData(uint8_t command)
 //            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
     //sprintf(Buf,"Hour: %d, minute : %d, second : %d, milliseconds : %d\n", GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds);
 		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
-	//HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 6:
     sprintf(Buf,"R[P]: %2.2f, P[P]: %2.2f, R[I]: %2.2f, P[I]: %2.2f, R[D]: %2.2f, P[D]: %2.2f, Y[P]: %2.2f, Y[I]: %2.2f, Y[D]: %2.2f, ARMED: (%d), Tuning : (%d)\r\n",
@@ -283,52 +286,55 @@ void PrintData(uint8_t command)
 }
 
 void SerialCom(void) {
-		volatile uint8_t c;
-		for(int i = 0; i < 2; i++){
+	uint8_t c;
+	for(int i = 0; i < 2; i++){
     currentPortState = &ports[i];
 //			printf("port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
 //	    sprintf(Buf,"port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
 //	    HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
-
     while(QueueAvailable(&Q_buffer[i]) > 0){
 	  c = read_Q(&Q_buffer[i]);
     if (currentPortState->c_state == IDLE) {
       currentPortState->c_state = (c=='$') ? HEADER_START : IDLE;
-    }
-    else if (currentPortState->c_state == HEADER_START) {
+    } else if (currentPortState->c_state == HEADER_START) {
       currentPortState->c_state = (c=='M') ? HEADER_M : IDLE;
-    }
-    else if (currentPortState->c_state == HEADER_M) {
+    } else if (currentPortState->c_state == HEADER_M) {
       currentPortState->c_state = (c=='<') ? HEADER_ARROW : IDLE;
-
-    }
-    else if (currentPortState->c_state == HEADER_ARROW) {
-
+    } else if (currentPortState->c_state == HEADER_ARROW) {
       if (c > INBUF_SIZE) {  // now we are expecting the payload size
         currentPortState->c_state = IDLE;
         continue;
       }
         currentPortState->dataSize = c;
         currentPortState->offset = 0;
+        currentPortState->indRX = 0;
         currentPortState->checksum = 0;
-				currentPortState->indRX = 0;
         currentPortState->checksum ^= c;
         currentPortState->c_state = HEADER_SIZE;
-    }
-    else if (currentPortState->c_state == HEADER_SIZE) {
+    } else if (currentPortState->c_state == HEADER_SIZE) {
       currentPortState->cmdMSP = c;
       currentPortState->checksum ^= c;
       currentPortState->c_state = HEADER_CMD;
-    }
-    else if (currentPortState->c_state == HEADER_CMD && currentPortState->offset < currentPortState->dataSize) {
+    } else if (currentPortState->c_state == HEADER_CMD && currentPortState->offset < currentPortState->dataSize) {
       currentPortState->checksum ^= c;
       currentPortState->inBuf[currentPortState->offset++] = c;
-    }
-    else if (currentPortState->c_state == HEADER_CMD && currentPortState->offset >= currentPortState->dataSize) {
-
+    } else if (currentPortState->c_state == HEADER_CMD && currentPortState->offset >= currentPortState->dataSize) {
       if (currentPortState->checksum == c) {
 				evaluateCommand();
-      }
+      }// else{
+//        sprintf(Buf, "invalid checksum for command : %d, expected checksum: %d, got checksum : %d, dataSize : %d\r\n ", currentPortState->cmdMSP, currentPortState->checksum, c, currentPortState->dataSize);
+//        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf),1000);
+//        for (i=0; i<currentPortState->dataSize; i++) {
+//          if (i!=0) {
+//            sprintf(Buf, " ");
+//            HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf),1000);
+//          }
+//          sprintf(Buf, "%d", currentPortState->inBuf[i]);
+//          HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf),1000);
+//        }
+//        sprintf(Buf, "\r\n\r\n");
+//        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf),1000);
+//      }
       currentPortState->c_state = IDLE;
     }
    }
@@ -337,7 +343,7 @@ void SerialCom(void) {
 
  void evaluateCommand(void) {
 	 uint8_t i=0;
-
+	 uint32_t tmp=0;
 	 switch(currentPortState->cmdMSP){
 		 case MSP_ARM:
 			 mwArm();
@@ -366,66 +372,118 @@ void SerialCom(void) {
 				
 		 case MSP_RC:
 		 {  struct {
-		    uint16_t roll, pitch, yaw, throttle, aux1;
+		    uint16_t roll, pitch, yaw, throttle, gear, aux1;
 		    } rc;
 		    rc.roll     = RC.rcCommand[ROLL];
 		    rc.pitch    = RC.rcCommand[PITCH];
 		    rc.yaw      = RC.rcCommand[YAW];
 		    rc.throttle = RC.rcCommand[THROTTLE];
-		    rc.aux1     = RC.rcCommand[AUX1];
-//			 	headSerialReply(10);
-//			  for (i = 0; i < 5; i++)
-//         serialize16(RC.rcCommand[i]);
-//				tailSerialReply();
-		   s_struct((uint8_t*)&rc, 10);
+        rc.aux1     = RC.rcCommand[AUX1];
+        rc.gear     = RC.rcCommand[GEAR];
+		   s_struct((uint8_t*)&rc, 12);
 			 break;
 		 }
-			case MSP_RAW_IMU:
-//	     {  struct {
-//	        int32_t roll, pitch, yaw;
-//	        } angle;
-//	        angle.roll     = (int32_t)imu.AHRS[ROLL]+400;
-//	        angle.pitch    = (int32_t)imu.AHRS[PITCH]+400;
-//	        angle.yaw      = (int32_t)imu.AHRS[YAW]+400;
-//	       s_struct((uint8_t*)&angle, 12);
-//	       break;
-//	     }
-//        sprintf(Buf, "IMU : %d, %d, %d\r\n ", currentPortState->dataSize, currentPortState->cmdMSP, currentPortState->checksum);
-//        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
-				headSerialReply(12);
-			  for (i = 0; i < 3; i++)
-				  serialize32(imu.AHRS[i]+400);
-				tailSerialReply();
-			 break;
 
 	    case MSP_STATUS:
 	    	{ struct {
-	        uint16_t cycleTime;
-	        uint8_t mode, error, errors_count;
+          uint32_t ArmedTime;
+	        uint32_t cycleTime;
+	        uint8_t error, flag;
 	    	} st;
-	      	  st.cycleTime    = cycleTime;
-	      	  st.mode         = f.ARMED;
+	    	    st.ArmedTime    = armedTime;
+	      	  st.cycleTime    = loopTime;
 	      	  st.error        = Error.error;
-	      	  st.errors_count = Error.error_counter;
-	      	  s_struct((uint8_t*)&st,5);
+	      	  if(f.ARMED) tmp |= 1<<BOXARM;
+            if(f.HEADFREE_MODE) tmp |= 1<<BOXHEADFREE;
+	      	  st.flag         = tmp;
+	      	  s_struct((uint8_t*)&st,10);
 	      	  break;
 	    	}
+
+	    case MSP_ATTITUDE:
+	      s_struct((uint8_t*)&att,9);
+	      break;
+
+	    case MSP_ALTITUDE:
+      { struct {
+        int16_t alt;
+      } tmp;
+	      tmp.alt = (int16_t) alt.EstAlt;
+	      s_struct((uint8_t*)&tmp,2);
+	      break;
+      }
+
+	    case MSP_RAW_IMU:
+        { struct {
+          int16_t acc[3];
+          int16_t gyro[3];
+          int16_t mag[3];
+        } mpu;
+        for(uint8_t axis=0; axis<3;axis++){
+          mpu.acc[axis]  = (int16_t) map(imu.accADC[axis], -32768, 32768, -1000, 1000);
+          mpu.gyro[axis] = (int16_t) imu.gyroRaw[axis];
+          mpu.mag[axis]  = (int16_t) imu.magRaw[axis];
+        }
+	      s_struct((uint8_t*)&mpu,18);
+	      break;
+       }
+
+	    case MSP_RAW_GPS:
+	      { struct {
+	        uint8_t a,b;
+	        int32_t c,d;
+//	        int16_t e;
+//	        uint16_t f,g;
+	      } msp_raw_gps;
+	      msp_raw_gps.a     = GPS.fixquality;
+	      msp_raw_gps.b     = GPS.satellites;
+	      msp_raw_gps.c     = (int32_t) GPS.latitudeDegrees;
+	      msp_raw_gps.d     = (int32_t) GPS.longitudeDegrees;
+//	      msp_raw_gps.e     = GPS_altitude;
+//	      msp_raw_gps.f     = GPS_speed;
+//	      msp_raw_gps.g     = GPS_ground_course;
+	      s_struct((uint8_t*)&msp_raw_gps,10);
+	      break;
+	     }
+
+	    case MSP_MOTOR:
+	      s_struct((uint8_t*)&motor,8);
+	      break;
+
 		 case MSP_PID:
-			 headSerialReply(36);
-			  for (i = 0; i < 3; i++){
-				 serialize32(pid.kp[i]*10);
-				 serialize32(pid.ki[i]*10);
-				 serialize32(pid.kd[i]*10);
-				}
-				tailSerialReply();
+     { struct {
+        uint16_t ROLL[3];
+        uint16_t PITCH[3];
+        uint16_t YAW[3];
+      } pid_t;
+        pid_t.ROLL[0]  = (int16_t) (pid.kp[ROLL]  * 10);
+        pid_t.ROLL[1]  = (int16_t) (pid.ki[ROLL]  * 10);
+        pid_t.ROLL[2]  = (int16_t) (pid.kd[ROLL]  * 10);
+        pid_t.PITCH[0] = (int16_t) (pid.kp[PITCH] * 10);
+        pid_t.PITCH[1] = (int16_t) (pid.ki[PITCH] * 10);
+        pid_t.PITCH[2] = (int16_t) (pid.kd[PITCH] * 10);
+        pid_t.YAW[0]   = (int16_t) (pid.kp[YAW]   * 10);
+        pid_t.YAW[1]   = (int16_t) (pid.ki[YAW]   * 10);
+        pid_t.YAW[2]   = (int16_t) (pid.kd[YAW]   * 10);
+        s_struct((uint8_t*)&pid_t,18);
+
        break;			
-				
+     }
+
+	    case MSP_ANALOG:
+	     { struct {
+	        uint16_t VBAT;
+	        uint16_t Temp;
+	      } analog;
+
+	      analog.VBAT = (int16_t) BAT.VBAT;
+	      analog.Temp = (int16_t) (imu.Temp*10);
+
+	      s_struct((uint8_t*)&analog,7);
+	      break;
+	     }
+
 		 case MSP_SET_PID:
-		   RGB_B_TOGGLE;
-	        headSerialReply(0);tailSerialReply();
-	        time1++;
-	        sprintf(Buf, "time : %d\r\n ", time1);
-	        HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 			 	for(i=0; i < 3; i++){
 				 pid.kp[i] = (float) read16();
 				 pid.kp[i] /= 10;
@@ -511,11 +569,251 @@ void SerialCom(void) {
 	      }
 	     break;
 
-     case MSP_RAW_GPS:
-//          GPSValues result = p.evalGPS(inBuf);
-//          logger.logGPS(result);
+     case TELEMERY_ERROR:
+       headSerial(0, 1, TELEMERY_ERROR);
+       serialize8(Error.error);
+       tailSerialReply();
        break;
 
+     case TELEMERY_ARMED_MODE:
+       headSerial(0, 1, TELEMERY_ARMED_MODE);
+       serialize8(f.ARMED);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_HEADFREE_MODE:
+       headSerial(0, 1, TELEMERY_HEADFREE_MODE);
+       serialize8(f.HEADFREE_MODE);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_CYCLE_TIME:
+       headSerial(0, 4, TELEMERY_CYCLE_TIME);
+       serialize32(loopTime);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_BAT_VOLT:
+       headSerial(0, 4, TELEMERY_BAT_VOLT);
+       serialize32(BAT.VBAT);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_TEMPERATURE:
+       headSerial(0, 4, TELEMERY_TEMPERATURE);
+       serialize32(imu.Temp*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ANGLE_ROLL:
+       headSerial(0, 4, TELEMERY_ANGLE_ROLL);
+       serialize32(imu.AHRS[ROLL]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ANGLE_PITCH:
+       headSerial(0, 4, TELEMERY_ANGLE_PITCH);
+       serialize32(imu.AHRS[PITCH]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ANGLE_YAW:
+       headSerial(0, 4, TELEMERY_ANGLE_YAW);
+       serialize32(imu.AHRS[YAW]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_HEADING:
+       headSerial(0, 4, TELEMERY_HEADING);
+       serialize32(imu.actual_compass_heading);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ACC_ROLL:
+       headSerial(0, 4, TELEMERY_ACC_ROLL);
+       serialize32((float)map(imu.accADC[ROLL], -32768, 32768, -1000, 1000)+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ACC_PITCH:
+       headSerial(0, 4, TELEMERY_ACC_PITCH);
+       serialize32((float)map(imu.accADC[PITCH], -32768, 32768, -1000, 1000)+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ACC_YAW:
+       headSerial(0, 4, TELEMERY_ACC_YAW);
+       serialize32((float)map(imu.accADC[YAW], -32768, 32768, -1000, 1000)+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_GYRO_ROLL:
+       headSerial(0, 4, TELEMERY_GYRO_ROLL);
+       serialize32(imu.gyroRaw[ROLL]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_GYRO_PITCH:
+       headSerial(0, 4, TELEMERY_GYRO_PITCH);
+       serialize32(imu.gyroRaw[PITCH]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_GYRO_YAW:
+       headSerial(0, 4, TELEMERY_GYRO_YAW);
+       serialize32(imu.gyroRaw[YAW]+400);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MAG_ROLL:
+       headSerial(0, 4, TELEMERY_MAG_ROLL);
+       serialize32(imu.magRaw[ROLL]+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MAG_PITCH:
+       headSerial(0, 4, TELEMERY_MAG_PITCH);
+       serialize32(imu.magRaw[PITCH]+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MAG_YAW:
+       headSerial(0, 4, TELEMERY_MAG_YAW);
+       serialize32(imu.magRaw[YAW]+1000);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_ARMD_TIME:
+       headSerial(0, 4, TELEMERY_ARMD_TIME);
+       serialize32(armedTime);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_BARO_EST:
+       headSerial(0, 4, TELEMERY_BARO_EST);
+       serialize32(ms5611.altitude_ref_ground);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_RP_P:
+       headSerial(0, 4, TELEMERY_PID_RP_P);
+       serialize32(pid.kp[ROLL]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_RP_I:
+       headSerial(0, 4, TELEMERY_PID_RP_I);
+       serialize32(pid.ki[ROLL]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_RP_D:
+       headSerial(0, 4, TELEMERY_PID_RP_D);
+       serialize32(pid.kd[ROLL]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_Y_P:
+       headSerial(0, 4, TELEMERY_PID_Y_P);
+       serialize32(pid.kp[YAW]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_Y_I:
+       headSerial(0, 4, TELEMERY_PID_Y_I);
+       serialize32(pid.ki[YAW]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_PID_Y_D:
+       headSerial(0, 4, TELEMERY_PID_Y_D);
+       serialize32(pid.kd[YAW]*10);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_NUM_SATS:
+       headSerial(0, 1, TELEMERY_NUM_SATS);
+       serialize8(GPS.satellites);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_FIX_TYPE:
+       headSerial(0, 1, TELEMERY_FIX_TYPE);
+       serialize8(GPS.fixquality);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_GPS_LAT:
+       headSerial(0, 4, TELEMERY_GPS_LAT);
+       serialize32(GPS.latitudeDegrees);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_GPS_LON:
+       headSerial(0, 4, TELEMERY_GPS_LON);
+       serialize32(GPS.longitudeDegrees);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_ROLL:
+       headSerial(0, 2, TELEMERY_RADIO_ROLL);
+       serialize16(RC.rcCommand[ROLL]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_PITCH:
+       headSerial(0, 2, TELEMERY_RADIO_PITCH);
+       serialize16(RC.rcCommand[PITCH]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_YAW:
+       headSerial(0, 2, TELEMERY_RADIO_YAW);
+       serialize16(RC.rcCommand[YAW]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_THROTTLE:
+       headSerial(0, 2, TELEMERY_RADIO_THROTTLE);
+       serialize16(RC.rcCommand[THROTTLE]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_GEAR:
+       headSerial(0, 2, TELEMERY_RADIO_GEAR);
+       serialize16(RC.rcCommand[GEAR]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_RADIO_AUX1:
+       headSerial(0, 2, TELEMERY_RADIO_AUX1);
+       serialize16(RC.rcCommand[AUX1]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MOTOR_1:
+       headSerial(0, 2, TELEMERY_MOTOR_1);
+       serialize16(motor[0]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MOTOR_2:
+       headSerial(0, 2, TELEMERY_MOTOR_2);
+       serialize16(motor[1]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MOTOR_3:
+       headSerial(0, 2, TELEMERY_MOTOR_3);
+       serialize16(motor[2]);
+       tailSerialReply();
+       break;
+
+     case TELEMERY_MOTOR_4:
+       headSerial(0, 2, TELEMERY_MOTOR_4);
+       serialize16(motor[3]);
+       tailSerialReply();
+       break;
 
 		 default:
 		   //headSerialError();

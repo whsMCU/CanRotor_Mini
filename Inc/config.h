@@ -21,7 +21,7 @@
 
 //#define GPS_Recive  //USART1, BaudRate : 57600
 //#define DEVO7_Recive
-#define BLE_Recive   // USART1, BaudRate : 115200
+//#define BLE_Recive   // USART1, BaudRate : 115200
 #define Telemetry    // USART2, BaudRate : 57600
 //#define SSD1306
 

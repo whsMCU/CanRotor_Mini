@@ -1,4 +1,4 @@
-main.c:826:6:Error_Handler	8	static
-main.c:340:6:SystemClock_Config	88	static
+main.c:827:6:Error_Handler	8	static
+main.c:341:6:SystemClock_Config	88	static
 main.c:128:5:main	208	static
-main.c:854:6:HAL_TIM_PeriodElapsedCallback	0	static
+main.c:855:6:HAL_TIM_PeriodElapsedCallback	0	static

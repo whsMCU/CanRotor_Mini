@@ -230,6 +230,7 @@ int main(void){
  ///////////////////////////////////////////////////////////
    HAL_UART_Receive_DMA(&huart1, (uint8_t*)rx1_buffer, 1);
    HAL_UART_Receive_DMA(&huart2, (uint8_t*)rx2_buffer, 1);
+   //HAL_UART_Receive_IT(&huart2, (uint8_t*)rx2_buffer, 1);
   /* USER CODE END 2 */
    previousTime = micros();
   /* Infinite loop */
@@ -283,8 +284,8 @@ int main(void){
 
         //PrintData(3);   //GPS Data
        // PrintData(10);
-      //  PrintData(1);
-      //  PrintData(5);   //All Data Output
+     //   PrintData(1);
+        PrintData(5);   //All Data Output
      //  PrintData(6);   //PID Tune
 
       flight_mode_signal();
@@ -296,7 +297,7 @@ int main(void){
       uint8_t t=0;
       timeInterleave = micros();
 //          time = micros();
-      SendTelemetry();
+      //SendTelemetry();
 //          aftertime = micros();
 //           time1 = aftertime - time;
 //           sprintf(Buf, "count : %d, time : %d\r\n ",telemetry_loop_counter, time1);
@@ -747,7 +748,6 @@ huart1.Init.BaudRate = 115200;//115200
 /* USART2 init function */
 static void MX_USART2_UART_Init(void)
 {
-
   huart2.Instance = USART2;
   huart2.Init.BaudRate = 57600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;

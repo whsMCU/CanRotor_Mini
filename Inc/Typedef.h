@@ -40,6 +40,17 @@ typedef struct flags_t {
     uint8_t CRUISE_MODE;
 } flags_t;
 
+enum box {
+  BOXARM,
+  BOXHEADFREE,
+};
+
+typedef struct {
+  int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
+  int16_t heading;             // variometer in cm/s
+  int16_t mag_heading;
+} att_t;
+
 typedef struct bat_t {
     uint32_t VBAT_Sense;
     float VBAT;

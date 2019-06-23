@@ -421,6 +421,8 @@ void CAL_Heading(void)
   }else if (imu.actual_compass_heading >= 360){
 	  imu.actual_compass_heading -= 360;
   }
+
+  att.mag_heading = (int16_t) imu.actual_compass_heading;
 }
 
 void Temp_getADC(void)

@@ -1,7 +1,7 @@
-IMU.c:15:7:invSqrt	16	static
-IMU.c:33:6:calculateAngles	48	static
-IMU.c:76:6:TM_AHRSIMU_Init	16	static
-IMU.c:194:6:TM_AHRSIMU_UpdateIMU	112	static
-IMU.c:87:6:TM_AHRSIMU_UpdateAHRS	168	static
-IMU.c:278:14:MadgwickQuaternionUpdate	128	static
-IMU.c:379:6:computeIMU	24	static
+IMU.c:17:7:invSqrt	16	static
+IMU.c:35:6:calculateAngles	48	static
+IMU.c:82:6:TM_AHRSIMU_Init	16	static
+IMU.c:200:6:TM_AHRSIMU_UpdateIMU	112	static
+IMU.c:93:6:TM_AHRSIMU_UpdateAHRS	168	static
+IMU.c:284:14:MadgwickQuaternionUpdate	128	static
+IMU.c:385:6:computeIMU	24	static

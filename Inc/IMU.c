@@ -2,6 +2,8 @@
 #include "Board.h"
 TM_AHRSIMU_t AHRSIMU;
 
+att_t att;
+
 float Pre_IMU[3] = {0, 0, 0};
 float Pre_gyro = 0;
 float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};
@@ -66,6 +68,10 @@ void calculateAngles(TM_AHRSIMU_t* AHRSIMU) {
 		imu.AHRS[ROLL] = AHRSIMU->Roll + 0.0f;
 		imu.AHRS[PITCH] = AHRSIMU->Pitch + 0.0f;
 		imu.AHRS[YAW] = AHRSIMU->Yaw;
+
+		att.angle[ROLL] = (int16_t) imu.AHRS[ROLL] * 10;
+    att.angle[PITCH] = (int16_t) imu.AHRS[PITCH] * 10;
+    att.heading = (int16_t) imu.AHRS[YAW];
 		
 	Pre_IMU[ROLL]  = AHRSIMU->Roll;
 	Pre_IMU[PITCH] = AHRSIMU->Pitch;
