@@ -22,34 +22,19 @@ typedef struct gps_t {
 
   uint16_t milliseconds;
 
-  float latitude;
-  float longitude;
+  int32_t latitudeDegrees;
+  int32_t longitudeDegrees;
 
-  uint32_t latitude_fixed;
-  uint32_t longitude_fixed;
+  uint16_t altitude;
 
-  float latitudeDegrees;
-  float longitudeDegrees;
+  uint16_t speed;
 
-  float geoidheight;
-  float altitude;
-
-  float speed;
-  float angle;
-  float magvariation;
-  float HDOP;
-
-  char lat;
-  char lon;
-  char mag;
-
-  bool fix;
+  uint8_t GPS_update;
+  uint8_t GPS_Frame;
+  uint16_t GPS_ground_course;                       //                   - unit: degree*10
 
   uint8_t fixquality;
   uint8_t satellites;
-
-  uint8_t lineidx;
-  uint8_t recvdflag;
 
   uint32_t error;
 
@@ -61,7 +46,11 @@ void USART2_TX_str(char *str);
 
 void gps_Init(void);
 
-bool gps_parse(void);
+//Function prototypes for GPS frame parsing
+bool GPS_newFrame(uint8_t c);
+uint32_t GPS_coord_to_degrees(char* s);
+uint32_t grab_fields(char* src, uint8_t mult);
+uint8_t hex_c(uint8_t n);
 
 uint8_t parseHex(char c);
 

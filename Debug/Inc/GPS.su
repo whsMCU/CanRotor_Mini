@@ -1,5 +1,8 @@
 GPS.c:12:6:USART2_TX	0	static
 GPS.c:13:6:USART2_TX_str	8	static
 GPS.c:15:6:gps_Init	0	static
-GPS.c:268:9:parseHex	0	static
-GPS.c:20:6:gps_parse	48	static
+GPS.c:81:9:parseHex	0	static
+GPS.c:95:10:GPS_coord_to_degrees	32	static
+GPS.c:132:10:grab_fields	20	static
+GPS.c:151:9:hex_c	0	static
+GPS.c:23:6:GPS_newFrame	24	static

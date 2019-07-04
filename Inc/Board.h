@@ -47,6 +47,8 @@ extern float output[3];
 extern float ITerm[3];
 extern int MSP_TRIM[3];
 extern eeror_t Error;
+extern uint8_t rx1_buffer[1];
+extern uint8_t rx2_buffer[1];
 extern pidc_t pid;
 extern imu_t imu;
 extern Queue_t Q_buffer[UART_MAX_CH];
@@ -56,24 +58,22 @@ extern bat_t BAT;
 extern ms5611_t ms5611;
 extern gps_t GPS;
 extern uint16_t calibratingA;
-extern TM_AHRSIMU_t AHRSIMU;
+extern TM_AHRSIMU_t AHRS;
 extern rc RC;
 extern rc RC_Raw;
 extern alt_t alt;
 extern test_t test;
 extern att_t att;
 
-extern volatile uint32_t loopTime, cycleTime, currentTime;
-extern int16_t overrun_count;
-extern uint32_t baroPressureSum;
-
 extern uint8_t telemetry_loop_counter;
+extern int16_t overrun_count;
 extern uint16_t time, time1, aftertime;
+extern uint16_t cycleTimeMax, cycleTimeMin;
+extern uint32_t baroPressureSum;
+extern volatile uint32_t loopTime, cycleTime, currentTime;
 extern uint32_t armedTime;
 
 extern float magBias[3], magScale[3];
-
-extern uint16_t cycleTimeMax, cycleTimeMin;
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846f

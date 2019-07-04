@@ -20,7 +20,7 @@
 //#define MAG_cal
 
 //#define GPS_Recive  //USART1, BaudRate : 57600
-//#define DEVO7_Recive
+#define DEVO7_Recive
 //#define BLE_Recive   // USART1, BaudRate : 115200
 #define Telemetry    // USART2, BaudRate : 57600
 //#define SSD1306
@@ -36,5 +36,6 @@
     #define VBATNOMINAL 42
     #define VBAT_SMOOTH 8              // len of averaging vector for smoothing the VBAT readings; should be power of 2; set to 1 to disable
 
+    #define HEADING_SMOOTH 20
 
 #endif

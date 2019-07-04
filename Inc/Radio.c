@@ -189,19 +189,16 @@ void computeRC(void)
         }
 
  		RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -20, 20)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
-		RC.rcCommand[PITCH]    = map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -20, 20)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
-		RC.rcCommand[YAW]      = map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -100, 100); //0~250 left:0, right:250
+		RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -20, 20)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
+		RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -100, 100); //0~250 left:0, right:250
 	  RC.rcCommand[THROTTLE] = map(zofs(RC.rcADC[THROTTLE], 1100, 10), 1100, 1900, 0, 1800);//0~250
 	  RC.rcCommand[GEAR] 	   = RC.rcADC[GEAR];
 	  RC.rcCommand[AUX1] 	   = RC.rcADC[AUX1];
 
-//  if (f.HEADFREE_MODE) {
-//        float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
-//        float cosDiff = cosf(radDiff);
-//        float sinDiff = sinf(radDiff);
-//        int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
-//        rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
-//        rcCommand[PITCH] = rcCommand_PITCH;
-//    }
+	  if(RC.rcCommand[GEAR] > 1500){
+	    mwArm();
+	  }else{
+	    mwDisarm();
+	  }
 
 }

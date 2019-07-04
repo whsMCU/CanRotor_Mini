@@ -1,6 +1,6 @@
 I2C.c:4:6:I2C_ByteWrite	56	static
-I2C.c:23:6:I2C_BitWrite	56	static
-I2C.c:46:6:I2C_ByteRead	24	static
-I2C.c:51:6:I2C_BitRead	40	static
-I2C.c:58:6:I2C_Write	48	static
-I2C.c:82:6:I2C_Read	40	static
+I2C.c:49:6:I2C_BitWrite	56	static
+I2C.c:72:6:I2C_ByteRead	48	static
+I2C.c:91:6:I2C_BitRead	40	static
+I2C.c:98:6:I2C_Write	48	static
+I2C.c:122:6:I2C_Read	40	static

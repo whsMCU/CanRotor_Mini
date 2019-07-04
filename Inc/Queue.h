@@ -1,7 +1,7 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-#define MAX 128
+#define MAX 255
 
 typedef struct queue {
   volatile uint8_t Ring_Buffer[MAX];

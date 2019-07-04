@@ -6,6 +6,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 #define UART_MAX_CH     2
 #define UART1 0
 #define UART2 1
+#define TX_BUFFER_SIZE 128
 
 void TX_CHR(char ch);
 void TX2_CHR(char ch);
@@ -15,6 +16,8 @@ void PrintData(uint8_t command);
 void SerialCom(void);
 void evaluateCommand(void);
 void SendTelemetry(void);
+void SerialSerialize(uint8_t port,uint8_t a);
+void UartSendData(uint8_t port);
 
 typedef enum serialState_t {
   IDLE,
@@ -46,6 +49,7 @@ typedef enum serialState_t {
 #define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
 #define MSP_BOXIDS               119   //out message         get the permanent IDs associated to BOXes
 #define MSP_SERVO_CONF           120   //out message         Servo settings
+#define MSP_RESET                121
 
 ////////////////////////////////////////////////////////////////////////////////
 #define MSP_RC_RAW               150   //out message         radio channel Flexbot

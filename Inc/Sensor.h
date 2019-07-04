@@ -20,9 +20,6 @@ typedef struct {
   float gyro_cal[3];
   float mag_cal[3];
 	
-  float Roll;
-  float Pitch;
-  float Yaw;
   float gyroYaw;
 	
   float AHRS[3];
@@ -515,9 +512,9 @@ void Gyro_getADC(void);
 void ACC_getADC(void);
 void Mag_getADC(void);
 void Temp_getADC(void);
-void GYRO_common(void);
-void ACC_common(void);
-void MAG_common(void);
+void GYRO_Common(void);
+void ACC_Common(void);
+void MAG_Common(void);
 void CAL_Heading(void);
 void calibrateMPU9250(float * dest1, float * dest2);
 void initAK8963(float * destination);

@@ -21,7 +21,7 @@ void QueueCreate(uint8_t channel){
 
 bool Init_Buffer(Queue_t *Q){
 	bool result = true;
-		uint8_t count;
+	uint8_t count;
 	for(count = 0; count<MAX; count++){
 		Q->Ring_Buffer[count]= 0;
 	}

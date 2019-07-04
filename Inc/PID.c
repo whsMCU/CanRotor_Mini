@@ -11,8 +11,6 @@ float dt_recip;
 #define I_MAX_Y			 800			// Out I_term maximum 300
 #define DIR				 1				// Direct PID Direction 1
 /* AHRS/IMU structure */
-extern TM_AHRSIMU_t AHRSIMU;
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -106,8 +104,6 @@ int16_t  magHold,headFreeModeHold; // [-180;+180]
 
 void Control(void)
 {
-	int axis;
-	float error, deriv;
 	dt_recip = 1/pid.ts;
 	if(!f.ARMED){
 	  headFreeModeHold = imu.actual_compass_heading;
@@ -116,8 +112,8 @@ void Control(void)
 #if defined(HEADFREE)
   if(f.HEADFREE_MODE) { //to optimize
     float radDiff = (imu.actual_compass_heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
-    float cosDiff = cos(radDiff);
-    float sinDiff = sin(radDiff);
+    float cosDiff = cosf(radDiff);
+    float sinDiff = sinf(radDiff);
     int16_t rcCommand_PITCH = RC.rcCommand[PITCH]*cosDiff + RC.rcCommand[ROLL]*sinDiff;
     RC.rcCommand[ROLL] =  RC.rcCommand[ROLL]*cosDiff - RC.rcCommand[PITCH]*sinDiff;
     RC.rcCommand[PITCH] = rcCommand_PITCH;
@@ -125,6 +121,8 @@ void Control(void)
 #endif
 	
 	#ifdef PID_DUAL
+  int axis;
+  float error, deriv;
 		//axis pid
 	  for(axis = 0; axis < 3; axis++){
 		error = RC.rcCommand[axis] - imu.AHRS[axis];

@@ -2,6 +2,13 @@
 #include "Board.h"
 char Buf[128];
 
+static volatile uint8_t serialHeadTX[UART_MAX_CH],serialTailTX[UART_MAX_CH];
+static uint8_t serialBufferTX[TX_BUFFER_SIZE][UART_MAX_CH];
+static uint8_t serialBufTx_0[TX_BUFFER_SIZE];
+static uint8_t serialBufTx_1[TX_BUFFER_SIZE];
+static volatile uint8_t serialHead;
+static uint8_t CURRENTPORT=0;
+
 volatile unsigned char command=0;
 volatile unsigned char m = 0;
 int MSP_TRIM[3]={0, 0, 0};
@@ -72,8 +79,9 @@ void TX2_CHR(char ch){
 ///////////////////////////////////////////////////
 void serialize8(uint8_t a)
 {
-    TX2_CHR(a);
-    currentPortState->checksum ^= (a & 0xFF);
+  SerialSerialize(CURRENTPORT,a);
+  //TX2_CHR(a);
+  currentPortState->checksum ^= (a & 0xFF);
 }
 
 void serialize16(int16_t a)
@@ -146,7 +154,9 @@ void headSerialError(uint8_t s)
 
 void tailSerialReply(void)
 {
-    serialize8(currentPortState->checksum);
+  SerialSerialize(CURRENTPORT,currentPortState->checksum);
+  UartSendData(CURRENTPORT);
+  //serialize8(currentPortState->checksum);
 }
 
 void s_struct_partial(uint8_t *cb,uint8_t siz) {
@@ -208,11 +218,12 @@ void PrintData(uint8_t command)
 	    break;
 
 	case 3:
-	  //sprintf(Buf, "latDeg : %f, lat : %c, lonDeg : %f, lon : %c, fixQ: %d, satel : %d, altitude : %.2fM, geohi : %.2fM \r\n",
-	  //        GPS.latitudeDegrees, GPS.lat, GPS.longitudeDegrees, GPS.lon, GPS.fixquality, GPS.satellites, GPS.altitude, GPS.geoidheight);
-	  sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, angle : %.2f, Error : %d\n",
-	          GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.angle, GPS.error);
-		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+	 // sprintf(Buf, "latDeg : %f, lat : %c, lonDeg : %f, lon : %c, fixQ: %d, satel : %d, altitude : %.2fM, geohi : %.2fM \n",
+	 //         GPS.latitudeDegrees, GPS.lat, GPS.longitudeDegrees, GPS.lon, GPS.fixquality, GPS.satellites, GPS.altitude, GPS.geoidheight);
+	  sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, update : %d\n",
+	          GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.GPS_update);
+    //sprintf(Buf, "latDeg : %f, lonDeg : %f \r\n", GPS.latitudeDegrees, GPS.longitudeDegrees);
+		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 		break;
 
 	case 4:
@@ -223,13 +234,13 @@ void PrintData(uint8_t command)
 //		sprintf(Buf, "motor:(%4.d)(%4.d)(%4.d)(%4.d), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d), VBAT: (%4.1f), ARMED: (%d), Tuning : (%d), Headfree: (%d), %d \r\n",
 //	  motor[0], motor[1], motor[2], motor[3], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1], BAT.VBAT, f.ARMED, f.Tuning_MODE, f.HEADFREE_MODE, test.VBAT_Compensat1);
 	  sprintf(Buf, "AHRS:(%4.f)(%4.f)(%4.f), ARMED: (%d), Headfree: (%d), cycleTime : %d, %d, %d, error : %d, %d, %3.1f, %3.1f, %d\r\n",
-	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW], test.VBAT_Compensat1);
+	    imu.AHRS[ROLL], imu.AHRS[PITCH], imu.gyroYaw, f.ARMED, f.HEADFREE_MODE, cycleTime, cycleTimeMin, cycleTimeMax, Error.error, overrun_count, imu.actual_compass_heading, imu.AHRS[YAW], alt.EstAlt);
 //		sprintf(Buf, "RC:(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)(%4.d)\r\n",
 //	   RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], RC.rcCommand[GEAR], RC.rcCommand[AUX1]);
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
 //            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
     //sprintf(Buf,"Hour: %d, minute : %d, second : %d, milliseconds : %d\n", GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds);
-		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 	//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 6:
@@ -249,13 +260,13 @@ void PrintData(uint8_t command)
 
 		break;
 	case 9:
-		sprintf(Buf, "Roll:(%.2f), Pitch:(%.2f), Yaw:(%.2f), rx_buffer:(%d)\r\n",AHRSIMU.Roll, AHRSIMU.Pitch, AHRSIMU.Yaw, rx1_buffer[0]);
+		sprintf(Buf, "Roll:(%.2f), Pitch:(%.2f), Yaw:(%.2f), rx_buffer:(%d)\r\n",AHRS.Roll, AHRS.Pitch, AHRS.Yaw, rx1_buffer[0]);
 	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 	     //HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 
 	case 10:
-		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", loopTime, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, alt.EstAlt, f.ARMED);
+		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", loopTime, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, (int16_t)alt.EstAlt, f.ARMED);
 		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 
 		break;
@@ -278,7 +289,7 @@ void PrintData(uint8_t command)
 			//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 14:
-		sprintf(Buf,"R/P/Y: %f %f %f\r\n",AHRSIMU.Roll, AHRSIMU.Pitch, AHRSIMU.Yaw);
+		sprintf(Buf,"R/P/Y: %f %f %f\r\n",AHRS.Roll, AHRS.Pitch, AHRS.Yaw);
 	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
 	 }
@@ -287,11 +298,11 @@ void PrintData(uint8_t command)
 
 void SerialCom(void) {
 	uint8_t c;
+  uint32_t timeMax; // limit max time in this function in case of GPS
+  timeMax = micros();
 	for(int i = 0; i < 2; i++){
     currentPortState = &ports[i];
-//			printf("port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
-//	    sprintf(Buf,"port: %d, Q_a : %2.1d, %2.1d \r\n",currentPortState->cmdMSP, Q_buffer[0].head, Q_buffer[0].tail);
-//	    HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+    CURRENTPORT = i;
     while(QueueAvailable(&Q_buffer[i]) > 0){
 	  c = read_Q(&Q_buffer[i]);
     if (currentPortState->c_state == IDLE) {
@@ -337,6 +348,24 @@ void SerialCom(void) {
 //      }
       currentPortState->c_state = IDLE;
     }
+#ifdef GPS_Recive
+    if(i == 0){
+      static uint32_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
+      if (GPS_newFrame(c)){
+        //We had a valid GPS data frame, so signal task scheduler to switch to compute
+        if (GPS.GPS_update == 1) GPS.GPS_update = 0; else GPS.GPS_update = 1; //Blink GPS update
+        GPS_last_frame_seen = timeMax;
+        GPS.GPS_Frame = 1;
+      }
+      // Check for stalled GPS, if no frames seen for 1.2sec then consider it LOST
+      if ((timeMax - GPS_last_frame_seen) > 1200000) {
+        //No update since 1200ms clear fix...
+        f.GPS_FIX = 0;
+        GPS.satellites = 0;
+      }
+    }
+    if (micros()-timeMax>250) return;  // Limit the maximum execution time of serial decoding to avoid time spike
+#endif
    }
   }
  }
@@ -401,7 +430,7 @@ void SerialCom(void) {
 	    	}
 
 	    case MSP_ATTITUDE:
-	      s_struct((uint8_t*)&att,9);
+	      s_struct((uint8_t*)&att,8);
 	      break;
 
 	    case MSP_ALTITUDE:
@@ -412,6 +441,58 @@ void SerialCom(void) {
 	      s_struct((uint8_t*)&tmp,2);
 	      break;
       }
+
+	    case MSP_MISC:
+      { struct {
+        uint16_t roll, pitch, yaw, throttle, gear, aux1;
+        uint32_t ArmedTime;
+        uint32_t cycleTime;
+        uint8_t error, flag;
+        int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
+        int16_t heading;             // variometer in cm/s
+        int16_t mag_heading;
+        int16_t alt;  //32
+        int16_t acc[3]; //38
+        int16_t gyro[3]; //44
+        int16_t mag[3]; //50
+        uint8_t a,b;
+        int32_t c,d;
+        int16_t motor[4];//68
+
+      } tele;
+      tele.roll     = RC.rcCommand[ROLL];
+      tele.pitch    = RC.rcCommand[PITCH];
+      tele.yaw      = RC.rcCommand[YAW];
+      tele.throttle = RC.rcCommand[THROTTLE];
+      tele.aux1     = RC.rcCommand[AUX1];
+      tele.gear     = RC.rcCommand[GEAR];
+      tele.ArmedTime    = armedTime;
+      tele.cycleTime    = loopTime;
+      tele.error        = Error.error;
+      if(f.ARMED) tmp |= 1<<BOXARM;
+      if(f.HEADFREE_MODE) tmp |= 1<<BOXHEADFREE;
+      tele.flag         = tmp;
+      tele.angle[ROLL] = (int16_t) imu.AHRS[ROLL] * 10;
+      tele.angle[PITCH] = (int16_t) imu.AHRS[PITCH] * 10;
+      tele.heading = (int16_t) imu.AHRS[YAW];
+      tele.mag_heading = (int16_t) imu.actual_compass_heading;
+      tele.alt = (int16_t) alt.EstAlt;
+      for(uint8_t axis=0; axis<3;axis++){
+        tele.acc[axis]  = (int16_t) map(imu.accADC[axis], -32768, 32768, -1000, 1000);
+        tele.gyro[axis] = (int16_t) imu.gyroRaw[axis];
+        tele.mag[axis]  = (int16_t) imu.magRaw[axis];
+      }
+      tele.a     = GPS.fixquality;
+      tele.b     = GPS.satellites;
+      tele.c     = GPS.latitudeDegrees;
+      tele.d     = GPS.longitudeDegrees;
+      tele.motor[0] = motor[0];
+      tele.motor[1] = motor[1];
+      tele.motor[2] = motor[2];
+      tele.motor[3] = motor[3];
+      s_struct((uint8_t*)&tele,68);
+      break;
+     }
 
 	    case MSP_RAW_IMU:
         { struct {
@@ -437,8 +518,8 @@ void SerialCom(void) {
 	      } msp_raw_gps;
 	      msp_raw_gps.a     = GPS.fixquality;
 	      msp_raw_gps.b     = GPS.satellites;
-	      msp_raw_gps.c     = (int32_t) GPS.latitudeDegrees;
-	      msp_raw_gps.d     = (int32_t) GPS.longitudeDegrees;
+	      msp_raw_gps.c     = GPS.latitudeDegrees;
+	      msp_raw_gps.d     = GPS.longitudeDegrees;
 //	      msp_raw_gps.e     = GPS_altitude;
 //	      msp_raw_gps.f     = GPS_speed;
 //	      msp_raw_gps.g     = GPS_ground_course;
@@ -476,10 +557,10 @@ void SerialCom(void) {
 	        uint16_t Temp;
 	      } analog;
 
-	      analog.VBAT = (int16_t) BAT.VBAT;
-	      analog.Temp = (int16_t) (imu.Temp*10);
+	      analog.VBAT = BAT.VBAT;
+	      analog.Temp = (imu.Temp*10);
 
-	      s_struct((uint8_t*)&analog,7);
+	      s_struct((uint8_t*)&analog,4);
 	      break;
 	     }
 
@@ -493,6 +574,13 @@ void SerialCom(void) {
 				 pid.kd[i] /= 10;
 				}
        break;
+
+     case MSP_RESET:
+       Error.error = 0;
+       RGB_R_OFF;
+       cycleTimeMax = 0;
+       cycleTimeMin = 65535;
+        break;
 
 		 case MSP_ACC_CALIBRATION:
 			 //if(!f.ARMED) calibratingA=512;
@@ -1035,4 +1123,33 @@ void SendTelemetry(void){
   }
 
   if (telemetry_loop_counter == 42) telemetry_loop_counter = 0;
+}
+
+void SerialSerialize(uint8_t port,uint8_t a) {
+//  uint8_t t = serialHeadTX[port];
+//  if (++t >= TX_BUFFER_SIZE) t = 0;
+//  serialBufferTX[t][port] = a;
+//  serialHeadTX[port] = t;
+  if(port == 0){
+    serialBufTx_0[serialHead++] = a;
+  }else if(port == 1){
+    serialBufTx_1[serialHead++] = a;
+  }
+
+}
+
+void UartSendData(uint8_t port) {
+//  while(serialHeadTX[port] != serialTailTX[port]) {
+//    if (++serialTailTX[port] >= TX_BUFFER_SIZE) serialTailTX[port] = 0;
+//    while(!(USART2->SR & 0x80));
+//    USART2->DR = serialBufferTX[serialTailTX[port]][port];
+//  }
+  if(port == 0){
+    //while(HAL_UART_Transmit_DMA(&huart1, serialBufTx_0, serialHead) !=0);
+    HAL_UART_Transmit_DMA(&huart1, serialBufTx_0, serialHead);
+  }else if(port == 1){
+    //while(HAL_UART_Transmit_DMA(&huart2, serialBufTx_1, serialHead) !=0);
+    HAL_UART_Transmit_DMA(&huart2, serialBufTx_1, serialHead);
+  }
+  serialHead = 0;
 }

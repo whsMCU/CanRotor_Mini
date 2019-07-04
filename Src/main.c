@@ -78,15 +78,8 @@ DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart2_rx;
 
-/* USER CODE BEGIN PV */
-/* AHRS/IMU structure */
-extern TM_AHRSIMU_t AHRSIMU;
 bat_t BAT;
 eeror_t Error;
-extern pidc_t pid;
-
-extern uint8_t rx1_buffer[1];
-extern uint8_t rx2_buffer[1];
 
 int Flight_Status = 0;
 
@@ -99,9 +92,6 @@ uint32_t armedTime = 0;
 int16_t overrun_count = 0;
 uint16_t timeInterleave = 0;
 
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
@@ -112,41 +102,10 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void){
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C2_Init();  //IMU
@@ -157,16 +116,17 @@ int main(void){
   MX_TIM3_Init(); //Radio
   MX_TIM2_Init(); //Radio
   /* USER CODE BEGIN 2 */
+
   LED1_ON;
   LED0_OFF;
-  for (int i = 0; i < 10; i++) {
-       LED1_TOGGLE;
-       LED0_TOGGLE;
-       HAL_Delay(25);
-       //BEEP_ON;
-       HAL_Delay(25);
-       //BEEP_OFF;
-    }
+  for (int i = 0; i < 10; i++){
+    LED1_TOGGLE;
+    LED0_TOGGLE;
+    HAL_Delay(25);
+    //BEEP_ON;
+    HAL_Delay(25);
+    //BEEP_OFF;
+  }
    LED0_OFF;
    LED1_OFF;
    //EEPROM_Test();
@@ -176,7 +136,7 @@ int main(void){
 
    #ifdef IMU_AHRS
    /* Init structure with 100hZ sample rate, 0.1 beta and 3.5 inclination (3.5 degrees is inclination in Ljubljana, Slovenia) on July, 2016 */
-  TM_AHRSIMU_Init(&AHRSIMU, 250, 1.2f, 0.0f);
+  TM_AHRSIMU_Init(&AHRS, 250, 1.2f, 0.0f);
        #endif
 
   Calibrate_gyro();
@@ -230,108 +190,93 @@ int main(void){
  ///////////////////////////////////////////////////////////
    HAL_UART_Receive_DMA(&huart1, (uint8_t*)rx1_buffer, 1);
    HAL_UART_Receive_DMA(&huart2, (uint8_t*)rx2_buffer, 1);
-   //HAL_UART_Receive_IT(&huart2, (uint8_t*)rx2_buffer, 1);
-  /* USER CODE END 2 */
+
    previousTime = micros();
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
     LED0_TOGGLE; //RED
 
-     #ifdef DEVO7_Recive
+    #ifdef DEVO7_Recive
       computeRC();
-     #endif
+    #endif
 
-     computeIMU(); //1050~1500us
+    computeIMU(); //1050~1500us
 
-     static uint8_t taskOrder = 0;
-     switch (taskOrder){ //4~206us
-       case 0: //200us
-         taskOrder++;
-         if(Baro_update() !=0) break;
-       case 1:  //80us
-         taskOrder++;
-         if(getEstimatedAltitude() !=0) break;
-       case 2:
-         taskOrder++;
-         #ifdef GPS_Recive
-           if(gps_parse() !=0) break;
-         #endif
-       case 3:  //15us
-         time = micros();
-         taskOrder = 0;
-         static uint8_t ind = 0;
-         static uint16_t vvec[VBAT_SMOOTH], vsum;
-         HAL_ADC_Start(&hadc1);
-         if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
-         {
-           BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
-           BAT.VBAT = ((((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW)*10;
-          }
-         vsum += BAT.VBAT;
-         vsum -= vvec[ind];
-         vvec[ind++] = BAT.VBAT;
-         ind %= VBAT_SMOOTH;
-         BAT.VBAT = vsum/VBAT_SMOOTH;
-         break;
-      }
-
-      Control();
-      mixTable();
-      PwmWriteMotor();
-
-        //PrintData(3);   //GPS Data
-       // PrintData(10);
-     //   PrintData(1);
-        PrintData(5);   //All Data Output
-     //  PrintData(6);   //PID Tune
-
-      flight_mode_signal();
-      #ifdef BLE_Recive
-      //SerialCom();
-      #endif
-      #ifdef Telemetry
-      SerialCom(); //4us
-      uint8_t t=0;
-      timeInterleave = micros();
-//          time = micros();
-      //SendTelemetry();
-//          aftertime = micros();
-//           time1 = aftertime - time;
-//           sprintf(Buf, "count : %d, time : %d\r\n ",telemetry_loop_counter, time1);
-//           HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
-      while((int16_t)(micros()-timeInterleave)<1500) t=1; //650
-      if(!t) overrun_count++;
-      #endif
-      loopTime = micros() - previousTime;
-      while(1){
-        currentTime = micros();
-        cycleTime = currentTime - previousTime;
-        #if defined(LOOP_TIME)
-          if (cycleTime >= LOOP_TIME){
-            if(cycleTime > (LOOP_TIME+50)){
-              RGB_R_TOGGLE;
-              Error.error = 4;
-            }
+    static uint8_t taskOrder = 0;
+    switch (taskOrder){ //4~206us
+      case 0: //200us
+        taskOrder++;
+        if(Baro_update() !=0) break;
+      case 1:  //80us
+        taskOrder++;
+        if(getEstimatedAltitude() !=0) break;
+      case 2:
+        taskOrder++;
+        #ifdef GPS_Recive
+          if (GPS_Compute() != 0) break;
             break;
-          }
-        #else
-          break;
         #endif
-      }
-      previousTime = currentTime;
+      case 3:  //15us
+        time = micros();
+        taskOrder = 0;
+        static uint8_t ind = 0;
+        static uint16_t vvec[VBAT_SMOOTH], vsum;
+        HAL_ADC_Start(&hadc1);
+        if(HAL_ADC_PollForConversion(&hadc1,1000000) == HAL_OK)
+        {
+          BAT.VBAT_Sense = HAL_ADC_GetValue(&hadc1);
+          BAT.VBAT = ((((BAT.VBAT_Sense*3.3)/4095)*(BAT_RUP+BAT_RDW))/BAT_RDW)*10;
+         }
+        vsum += BAT.VBAT;
+        vsum -= vvec[ind];
+        vvec[ind++] = BAT.VBAT;
+        ind %= VBAT_SMOOTH;
+        BAT.VBAT = vsum/VBAT_SMOOTH;
+         break;
+   }
+   Control();
+   mixTable();
+   PwmWriteMotor();
 
-    if(f.ARMED){
-      armedTime += (uint32_t)cycleTime;
-    }
-    if(loopTime > cycleTimeMax) cycleTimeMax = loopTime;
-    if(loopTime < cycleTimeMin) cycleTimeMin = loopTime;
+   //PrintData(3);   //GPS Data
+   //PrintData(10);  //Baro
+   //PrintData(1);
+   //PrintData(5);   //All Data Output
+   //PrintData(6);   //PID Tune
 
-    /* USER CODE BEGIN 3 */
+   flight_mode_signal();
+
+   #ifdef Telemetry
+     uint8_t t=0;
+     timeInterleave = micros();
+     SerialCom(); //4us
+     while((int16_t)(micros()-timeInterleave)<650) t=1; //650
+     if(!t) overrun_count++;
+   #endif
+   loopTime = micros() - previousTime;
+   while(1){
+     currentTime = micros();
+     cycleTime = currentTime - previousTime;
+     #if defined(LOOP_TIME)
+       if (cycleTime >= LOOP_TIME){
+         if(cycleTime > (LOOP_TIME+50)){
+           RGB_R_TOGGLE;
+           Error.error = 4;
+         }
+            break;
+       }
+       #else
+          break;
+     #endif
+   }
+   previousTime = currentTime;
+
+   if(f.ARMED){
+     armedTime += (uint32_t)cycleTime;
+   }
+   if(loopTime > cycleTimeMax) cycleTimeMax = loopTime;
+   if(loopTime < cycleTimeMin) cycleTimeMin = loopTime;
   }
-  /* USER CODE END 3 */
 }
 
 /**
