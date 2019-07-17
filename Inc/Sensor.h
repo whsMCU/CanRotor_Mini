@@ -20,8 +20,6 @@ typedef struct {
   float gyro_cal[3];
   float mag_cal[3];
 	
-  float gyroYaw;
-	
   float AHRS[3];
   float AHRS_DP[3];
 
@@ -507,7 +505,6 @@ void getAres(void);
 void MPU9250_Init(void);
 
 void Calibrate_gyro(void);
-void calibrate_compass(void);
 void Gyro_getADC(void);
 void ACC_getADC(void);
 void Mag_getADC(void);

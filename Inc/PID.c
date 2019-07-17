@@ -5,11 +5,20 @@ float dt_recip;
 
 
 // Configure PID
-#define OUT_MAX	    	 800			// Out PID maximum 250
-#define OUT_MAX_Y		 800			// Out PID maximum 250
-#define I_MAX	         800			// Out I_term maximum 300v
-#define I_MAX_Y			 800			// Out I_term maximum 300
-#define DIR				 1				// Direct PID Direction 1
+#ifdef MOTOR_DC
+  #define OUT_MAX      800      // Out PID maximum 250
+  #define OUT_MAX_Y    800      // Out PID maximum 250
+  #define I_MAX        400      // Out I_term maximum 300v
+  #define I_MAX_Y      400      // Out I_term maximum 300
+  #define DIR        1        // Direct PID Direction 1
+#endif
+#ifdef MOTOR_ESC
+  #define OUT_MAX      400      // Out PID maximum 250
+  #define OUT_MAX_Y    400      // Out PID maximum 250
+  #define I_MAX        200      // Out I_term maximum 300v
+  #define I_MAX_Y      200      // Out I_term maximum 300
+  #define DIR        1        // Direct PID Direction 1
+#endif
 /* AHRS/IMU structure */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,6 +207,109 @@ void Control(void)
 	  /*Remember some variables for next time*/
 	  pid.lastInput[YAW] = imu.gyroYaw;//imu.Yaw
 #endif
+    if(f.ANGLE_MODE || f.HORIZON_MODE){
+      pid.error[ROLL] = RC.rcCommand[ROLL] - imu.AHRS[ROLL];
+      pid.Iterm[ROLL] += pid.ki[ROLL] * pid.error[ROLL] * pid.ts;
+      if(pid.Iterm[ROLL] > I_MAX) pid.Iterm[ROLL] = I_MAX;
+      else if(pid.Iterm[ROLL] < -I_MAX) pid.Iterm[ROLL] = -I_MAX;
+      pid.dInput[ROLL] = (imu.AHRS[ROLL] - pid.lastInput[ROLL])  / pid.ts;
+
+      /*Compute PID Output*/
+      pid.output2[ROLL] = pid.kp[ROLL] * pid.error[ROLL] + pid.Iterm[ROLL] - pid.kd[ROLL] * pid.dInput[ROLL];
+
+      if(pid.output2[ROLL] > OUT_MAX) pid.output2[ROLL] = OUT_MAX;
+      else if(pid.output2[ROLL] < -OUT_MAX) pid.output2[ROLL] = -OUT_MAX;
+
+      /*Remember some variables for next time*/
+      pid.lastInput[ROLL] = imu.AHRS[ROLL];
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
+      /*Compute all the working error variables*/
+      pid.error[PITCH] = RC.rcCommand[PITCH] - imu.AHRS[PITCH];
+      pid.Iterm[PITCH] += pid.ki[PITCH] * pid.error[PITCH] * pid.ts;
+      if(pid.Iterm[PITCH] > I_MAX) pid.Iterm[PITCH] = I_MAX;
+      else if(pid.Iterm[PITCH] < -I_MAX) pid.Iterm[PITCH] = -I_MAX;
+      pid.dInput[PITCH] = (imu.AHRS[PITCH] - pid.lastInput[PITCH]) / pid.ts;
+
+      /*Compute PID Output*/
+      pid.output2[PITCH] = pid.kp[PITCH] * pid.error[PITCH] + pid.Iterm[PITCH] - pid.kd[PITCH] * pid.dInput[PITCH];
+
+      if(pid.output2[PITCH] > OUT_MAX) pid.output2[PITCH] = OUT_MAX;
+      else if(pid.output2[PITCH] < -OUT_MAX) pid.output2[PITCH] = -OUT_MAX;
+
+      /*Remember some variables for next time*/
+      pid.lastInput[PITCH] = imu.AHRS[PITCH];
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+      /*Compute all the working error variables*/
+      pid.error[YAW] = RC.rcCommand[YAW] - imu.gyroRaw[YAW];
+      pid.Iterm[YAW] += pid.ki[YAW] * pid.error[YAW] * pid.ts;
+      if(pid.Iterm[YAW] > I_MAX) pid.Iterm[YAW] = I_MAX;
+      else if(pid.Iterm[YAW] < -I_MAX) pid.Iterm[YAW] = -I_MAX;
+      pid.dInput[YAW] = (imu.gyroRaw[YAW] - pid.lastInput[YAW]) / pid.ts;
+
+      /*Compute PID Output*/
+      pid.output2[YAW] = pid.kp[YAW] * pid.error[YAW] + pid.Iterm[YAW] - pid.kd[YAW] * pid.dInput[YAW];
+
+      if(pid.output2[YAW] > OUT_MAX) pid.output2[YAW] = OUT_MAX;
+      else if(pid.output2[YAW] < -OUT_MAX) pid.output2[YAW] = -OUT_MAX;
+
+      /*Remember some variables for next time*/
+      pid.lastInput[YAW] = imu.gyroRaw[YAW];
+    }else if(f.ACRO_MODE){
+        pid.error[ROLL] = RC.rcCommand[ROLL] - imu.gyroRaw[ROLL];
+        pid.Iterm[ROLL] += pid.ki[ROLL] * pid.error[ROLL] * pid.ts;
+        if(pid.Iterm[ROLL] > I_MAX) pid.Iterm[ROLL] = I_MAX;
+        else if(pid.Iterm[ROLL] < -I_MAX) pid.Iterm[ROLL] = -I_MAX;
+        pid.dInput[ROLL] = (imu.gyroRaw[ROLL] - pid.lastInput[ROLL])  / pid.ts;
+
+        /*Compute PID Output*/
+        pid.output2[ROLL] = pid.kp[ROLL] * pid.error[ROLL] + pid.Iterm[ROLL] - pid.kd[ROLL] * pid.dInput[ROLL];
+
+        if(pid.output2[ROLL] > OUT_MAX) pid.output2[ROLL] = OUT_MAX;
+        else if(pid.output2[ROLL] < -OUT_MAX) pid.output2[ROLL] = -OUT_MAX;
+
+        /*Remember some variables for next time*/
+        pid.lastInput[ROLL] = imu.gyroRaw[ROLL];
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /*Compute all the working error variables*/
+        pid.error[PITCH] = RC.rcCommand[PITCH] - imu.gyroRaw[PITCH];
+        pid.Iterm[PITCH] += pid.ki[PITCH] * pid.error[PITCH] * pid.ts;
+        if(pid.Iterm[PITCH] > I_MAX) pid.Iterm[PITCH] = I_MAX;
+        else if(pid.Iterm[PITCH] < -I_MAX) pid.Iterm[PITCH] = -I_MAX;
+        pid.dInput[PITCH] = (imu.gyroRaw[PITCH] - pid.lastInput[PITCH]) / pid.ts;
+
+        /*Compute PID Output*/
+        pid.output2[PITCH] = pid.kp[PITCH] * pid.error[PITCH] + pid.Iterm[PITCH] - pid.kd[PITCH] * pid.dInput[PITCH];
+
+        if(pid.output2[PITCH] > OUT_MAX) pid.output2[PITCH] = OUT_MAX;
+        else if(pid.output2[PITCH] < -OUT_MAX) pid.output2[PITCH] = -OUT_MAX;
+
+        /*Remember some variables for next time*/
+        pid.lastInput[PITCH] = imu.gyroRaw[PITCH];
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /*Compute all the working error variables*/
+        pid.error[YAW] = RC.rcCommand[YAW] - imu.gyroRaw[YAW];
+        pid.Iterm[YAW] += pid.ki[YAW] * pid.error[YAW] * pid.ts;
+        if(pid.Iterm[YAW] > I_MAX) pid.Iterm[YAW] = I_MAX;
+        else if(pid.Iterm[YAW] < -I_MAX) pid.Iterm[YAW] = -I_MAX;
+        pid.dInput[YAW] = (imu.gyroRaw[YAW] - pid.lastInput[YAW]) / pid.ts;
+
+        /*Compute PID Output*/
+        pid.output2[YAW] = pid.kp[YAW] * pid.error[YAW] + pid.Iterm[YAW] - pid.kd[YAW] * pid.dInput[YAW];
+
+        if(pid.output2[YAW] > OUT_MAX) pid.output2[YAW] = OUT_MAX;
+        else if(pid.output2[YAW] < -OUT_MAX) pid.output2[YAW] = -OUT_MAX;
+
+        /*Remember some variables for next time*/
+        pid.lastInput[YAW] = imu.gyroRaw[YAW];//imu.Yaw
+    }
 #ifdef Recive_PID_CHANGE
 	  if(f.Tuning_MODE == 1){
 	    RGB_G_TOGGLE;

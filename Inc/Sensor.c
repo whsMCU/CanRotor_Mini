@@ -108,53 +108,53 @@ void MPU9250_Init(void)
     I2C_ByteRead(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_WHO_AM_I, 1, rawADC, 1);
     whoami = rawADC[0];
     sprintf(Buf, "I AM 0x%x\r\n", whoami);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     sprintf(Buf, "I SHOULD BE 0x71\r\n");
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
   if(whoami == 0x71)
   {
 		sprintf(Buf, "MPU-9250 Init Start (9-DOF 16-bit mortion sensor)\r\nMPU-9250 SelfTest Start\r\n");
-	  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
 	  I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH,MPU9250_RA_PWR_MGMT_1, 7, 8, 0x80); //resetMPU9250
 	  MPU9250SelfTest(SelfTest);
 		sprintf(Buf, "Self Test Finish\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 
 		sprintf(Buf, " x-axis self test: acceleration trim within : %f percent of factory value\r\n",SelfTest[0]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " y-axis self test: acceleration trim within : %f percent of factory value\r\n",SelfTest[1]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " z-axis self test: acceleration trim within : %f percent of factory value\r\n",SelfTest[2]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " x-axis self test: gyration trim within : %f percent of factory value\r\n",SelfTest[3]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " y-axis self test: gyration trim within : %f percent of factory value\r\n",SelfTest[4]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " z-axis self test: gyration trim within : %f percent of factory value\r\n",SelfTest[5]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 
 		sprintf(Buf, "MPU-9250 Calibration Start\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  calibrateMPU9250(gyroBias, accBias);
 		sprintf(Buf, "Calibration Finish\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, "   x       y      z\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " %.2f   %.2f   %.2f mg\r\n", 1000*accBias[0], 1000*accBias[1], 1000*accBias[2]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 		sprintf(Buf, " %.2f   %.2f   %.2f o/s\r\n", gyroBias[0], gyroBias[1], gyroBias[2]);
-		HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+		HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	  HAL_Delay(100); // for stability
 
 	// ACC Gyro_Init
@@ -180,7 +180,7 @@ void MPU9250_Init(void)
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_GYRO_CONFIG, 7, 8, rawADC[0] & ~0x18); // Clear AFS bits [4:3]
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_GYRO_CONFIG, 7, 8, rawADC[0] | (MPU9250_GYRO_FS_250<<3)); //GYRO_CONFIG   -- FS_SEL = 2: Full scale set to 1000 deg/sec
     sprintf(Buf, " GYRO : %d \r\n", c);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_GYRO_CONFIG, 7, 8, c);
 	  HAL_Delay(100);
 
@@ -193,7 +193,7 @@ void MPU9250_Init(void)
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG, 7, 8, rawADC[0] & ~0x18); // Clear AFS bits [4:3]
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG, 7, 8, rawADC[0] | (MPU9250_ACCEL_FS_2<<3)); //ACCEL_CONFIG  -- AFS_SEL=2 (Full Scale = +/-8G)  ; ACCELL_HPF=0   //note something is wrong in the spec.
     sprintf(Buf, " ACEL : %d \r\n", c);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG, 7, 8, c);
 	  HAL_Delay(100);
 
@@ -204,7 +204,7 @@ void MPU9250_Init(void)
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG2, 7, 8, rawADC[0] & ~0x0F);// Clear accel_fchoice_b (bit 3) and A_DLPFG (bits [2:0])
 //    I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG2, 7, 8, rawADC[0] | 0x03);// Set accelerometer rate to 1 kHz and bandwidth to 41 Hz
     sprintf(Buf, " ACEL2 : %d \r\n", c);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_CONFIG2, 7, 8, c);
 		HAL_Delay(100);
 //	  I2C_ByteWrite(MPU9250_ADDRESS_AD0_HIGH, 0x1A, 2, 3, 0x03); //0x03
@@ -222,16 +222,16 @@ void MPU9250_Init(void)
 
 	//Compass_Init
   sprintf(Buf, "AK8963 Init Start!\r\n");
-  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
   I2C_ByteRead(MPU9250_RA_MAG_ADDRESS, WHO_AM_I_AK8963, 1, rawADC, 1);
   whoami = rawADC[0];
   sprintf(Buf, "I AM 0x%x\r\n", whoami);
-  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
   sprintf(Buf, "I SHOULD BE 0x48\r\n");
-  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
 	sprintf(Buf, "AK8963 Init (Compass sensor)\r\n");
-	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	HAL_Delay(100); // for stability
 	initAK8963(magCalibration);
 	HAL_Delay(100); // for stability
@@ -241,13 +241,13 @@ void MPU9250_Init(void)
   getMres();
 
 	sprintf(Buf, "ASAX : %.2f\r\n", magCalibration[0]);
-	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	HAL_Delay(100); // for stability
 	sprintf(Buf, "ASAY : %.2f\r\n", magCalibration[1]);
-	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	HAL_Delay(100); // for stability
 	sprintf(Buf, "ASAZ : %.2f\r\n", magCalibration[2]);
-	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 	HAL_Delay(100); // for stability
 
 #ifdef MAG_cal
@@ -256,9 +256,9 @@ void MPU9250_Init(void)
 
   }else{
     sprintf(Buf, "Could not connect to MPU9250: %#x\r\n", whoami);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     sprintf(Buf, "Communication failed, abort!\r\n");
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+    HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
     while (Error.error !=0)
     {
@@ -278,7 +278,7 @@ void Calibrate_gyro(void)
     if (cal_int % 125 == 0) {
       RGB_G_TOGGLE;                                         //Change the led status to indicate calibration.
       sprintf(Buf, ".");
-      HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+      HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
     }
 
 		Gyro_getADC();
@@ -295,11 +295,6 @@ void Calibrate_gyro(void)
 	}
 	HAL_Delay(100);
 	PrintData(2);
-}
-
-void calibrate_compass(void)
-{
-
 }
 
 void Gyro_getADC(void){
@@ -358,15 +353,13 @@ void ACC_Common(void){
     imu.acc_cal[ROLL]  = a[ROLL]>>9;
     imu.acc_cal[PITCH] = a[PITCH]>>9;
     imu.acc_cal[YAW]   = (a[YAW]>>9)-(int32_t)aRes;
-    sprintf(Buf, "ACC_CALI_DONE : %ld, %ld, %ld\r\n ", imu.acc_cal[ROLL], imu.acc_cal[PITCH], imu.acc_cal[YAW]);
-    HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf),1000);
+    f.CALIBRATE_ACC = 0;
   }
   calibratingA--;
   }
 
   for(axis=0;axis<3;axis++){
     imu.accRaw[axis] = (float)imu.accADC[axis] * aRes;// - accBias[axis];
-    //imu.accRaw[axis] = ((float)imu.accADC[axis]-(float)imu.acc_cal[axis]) * AMult;// - accelBias[axis];
   }
 }
 
@@ -391,6 +384,42 @@ void Mag_getADC(void){
 
 void MAG_Common(void){
   uint8_t axis = 0;
+  static uint8_t flag = 0;
+  static int jj = 0;
+  static int32_t mag_bias[3] = {0, 0, 0}, mag_scale[3] = {0, 0, 0};
+  static int16_t mag_max[3] = {0x8000, 0x8000, 0x8000}, mag_min[3] = {0x7FFF, 0x7FFF, 0x7FFF}, mag_temp[3] = {0, 0, 0};
+
+  if(f.CALIBRATE_MAG==1){
+    flag = 1;
+     mag_temp[0] = imu.magADC[0];
+     mag_temp[1] = imu.magADC[1];
+     mag_temp[2] = imu.magADC[2];
+    for (jj = 0; jj < 3; jj++) {
+     if(mag_temp[jj] > mag_max[jj]) mag_max[jj] = mag_temp[jj];
+     if(mag_temp[jj] < mag_min[jj]) mag_min[jj] = mag_temp[jj];
+    }
+  }else if(flag == 1){
+    flag = 0;
+    // Get hard iron correction
+     mag_bias[0]  = (mag_max[0] + mag_min[0])/2;  // get average x mag bias in counts
+     mag_bias[1]  = (mag_max[1] + mag_min[1])/2;  // get average y mag bias in counts
+     mag_bias[2]  = (mag_max[2] + mag_min[2])/2;  // get average z mag bias in counts
+     magBias[0] = (float) mag_bias[0]*mRes*magCalibration[0];  // save mag biases in G for main program
+     magBias[1] = (float) mag_bias[1]*mRes*magCalibration[1];
+     magBias[2] = (float) mag_bias[2]*mRes*magCalibration[2];
+
+    // Get soft iron correction estimate
+     mag_scale[0]  = (mag_max[0] - mag_min[0])/2;  // get average x axis max chord length in counts
+     mag_scale[1]  = (mag_max[1] - mag_min[1])/2;  // get average y axis max chord length in counts
+     mag_scale[2]  = (mag_max[2] - mag_min[2])/2;  // get average z axis max chord length in counts
+
+     float avg_rad = mag_scale[0] + mag_scale[1] + mag_scale[2];
+     avg_rad /= 3.0;
+
+     magScale[0] = avg_rad/((float)mag_scale[0]);
+     magScale[1] = avg_rad/((float)mag_scale[1]);
+     magScale[2] = avg_rad/((float)mag_scale[2]);
+  }
   for(axis=0;axis<3;axis++)
   {
     imu.magRaw[axis] = (float)imu.magADC[axis] * mRes * magCalibration[axis] - magBias[axis];
@@ -686,9 +715,9 @@ void magcalMPU9250(float * dest1, float * dest2){
  int16_t mag_max[3] = {0x8000, 0x8000, 0x8000}, mag_min[3] = {0x7FFF, 0x7FFF, 0x7FFF}, mag_temp[3] = {0, 0, 0};
 
  sprintf(Buf, "Mag Calibration: Wave device in a figure 8 until done!\r\n");
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, "4 seconds to get ready followed by 15 seconds of sampling\r\n");
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  HAL_Delay(4000);
 
  // shoot for ~fifteen seconds of mag data
@@ -744,23 +773,23 @@ void magcalMPU9250(float * dest1, float * dest2){
  dest2[1] = avg_rad/((float)mag_scale[1]);
  dest2[2] = avg_rad/((float)mag_scale[2]);
  sprintf(Buf, "Mag Calibration done!\r\n");
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
  sprintf(Buf, " AK8963 mag biase(x): %f mG\r\n",dest1[0]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, " AK8963 mag biase(y): %f mG\r\n",dest1[1]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, " AK8963 mag biase(z): %f mG\r\n",dest1[2]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
  sprintf(Buf, " AK8963 mag Scale(x): %f mG\r\n",dest2[0]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, " AK8963 mag Scale(y): %f mG\r\n",dest2[1]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, " AK8963 mag Scale(z): %f mG\r\n",dest2[2]);
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
  sprintf(Buf, "gyro calibration start wait 5 second.!\r\n");
- HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+ HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
  writeFloat(36, dest1[0]);
  writeFloat(40, dest1[1]);
@@ -778,7 +807,7 @@ alt_t alt;
 void MS5611_Init(ms5611_osr_t osr)
 {
 	sprintf(Buf, "Initialize MS-5611 Sensor\r\n");
-	HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+	HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
   I2C_Write(MS5611_ADDRESS, MS5611_CMD_RESET, 1);
   // Set oversampling value
@@ -809,7 +838,7 @@ void MS5611_Init(ms5611_osr_t osr)
   }
 
   sprintf(Buf, "Oversampling: %d\r\n", ms5611.uosr);
-  HAL_UART_Transmit(&huart2, (uint8_t*)Buf, strlen(Buf), 1000);
+  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
 }
 

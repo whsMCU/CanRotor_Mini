@@ -78,17 +78,27 @@ void mixTable(void)
       #endif
 		}
   #endif
-
-	if(motor[i] <    0) motor[i] = 0;
-	if(motor[i] > 2000) motor[i] = 2000;
-
-	if(RC.rcCommand[THROTTLE] < 200 || f.ARMED == 0){
-		motor[i] = 0;
+#ifdef MOTOR_DC
+	  if(motor[i] <    0) motor[i] = 0;
+	  if(motor[i] > 2000) motor[i] = 2000;
+#endif
+#ifdef MOTOR_ESC
+  if(motor[i] < 1000) motor[i] = 1000;
+  if(motor[i] > 2000) motor[i] = 2000;
+#endif
+#ifdef MOTOR_DC
+  if(RC.rcCommand[THROTTLE] < 200 || f.ARMED == 0){
+    motor[i] = 0;
+#endif
+#ifdef MOTOR_ESC
+  if(RC.rcCommand[THROTTLE] < 1100 || f.ARMED == 0){
+    motor[i] = 1000;
+#endif
 		pid.output1[i] = 0;
 		pid.output2[i] = 0;
 		pid.Iterm[i] = 0;
 		pid.Iterm1[i] = 0;
 		pid.Iterm2[i] = 0;
 	}
-	}
+  }
 }

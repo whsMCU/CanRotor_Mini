@@ -18,9 +18,10 @@ typedef struct flags_t {
     uint8_t Tuning_MODE;
     uint8_t Write_MODE;
     ///////////////////////
-    uint8_t ACC_CALIBRATED;
+    uint8_t CALIBRATE_ACC;
     uint8_t ANGLE_MODE;
     uint8_t HORIZON_MODE;
+    uint8_t ACRO_MODE;
     uint8_t MAG_MODE;
     uint8_t BARO_MODE;
 	  uint8_t User_MODE;
@@ -43,6 +44,11 @@ typedef struct flags_t {
 enum box {
   BOXARM,
   BOXHEADFREE,
+  BOXANGLE_MODE,
+  BOXHORIZON_MODE,
+  BOXACRO_MODE,
+  BOXCALIBRATE_ACC,
+  BOXCALIBRATE_MAG,
 };
 
 typedef struct {

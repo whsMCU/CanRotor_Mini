@@ -1,13 +1,13 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define MOTOR_DC
-//#define MOTOR_ESC
+//#define MOTOR_DC
+#define MOTOR_ESC
 
 //#define IMU_NORMAL
 #define IMU_AHRS
 
-#define PID_NORMAL
+//#define PID_NORMAL
 //#define PID_DUAL
 
 #define HEADFREE

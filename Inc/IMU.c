@@ -43,23 +43,26 @@ void calculateAngles(TM_AHRSIMU_t* AHRS) {
     AHRS->Yaw *= R2D;// - AHRS->Inclination;
 
     /* Check values because of inclination */
-    if (AHRS->Yaw < -180) {
-        AHRS->Yaw = 180.0f - (-180.0f - AHRS->Yaw);
-    } else if (AHRS->Yaw > 180) {
-        AHRS->Yaw = -180.0f - (180.0f - AHRS->Yaw);
-    }
-
+//    if (AHRS->Yaw < -180) {
+//        AHRS->Yaw = 180.0f - (-180.0f - AHRS->Yaw);
+//    } else if (AHRS->Yaw > 180) {
+//        AHRS->Yaw = -180.0f - (180.0f - AHRS->Yaw);
+//    }
+//
     if (AHRS->Yaw >= 180) {
         AHRS->Yaw -= 360.0f;
     } else if (AHRS->Yaw < -180) {
         AHRS->Yaw += 360.0f;
     }
+//        if (AHRS->Yaw >= 0) {
+//            AHRS->Yaw = 360.0f - AHRS->Yaw;
+//        } else {
+//            AHRS->Yaw = - AHRS->Yaw;
+//        }
 
   AHRS->Roll  = (0.95 * (Pre_IMU[ROLL]  + (imu.gyroRaw[ROLL] * 0.004)))  + (0.05 * AHRS->Roll);
   AHRS->Pitch = (0.95 * (Pre_IMU[PITCH] + (imu.gyroRaw[PITCH] * 0.004))) + (0.05 * AHRS->Pitch);
   AHRS->Yaw   = (0.95 * (Pre_IMU[YAW]   + (imu.gyroRaw[YAW] * 0.004)))   + (0.05 * AHRS->Yaw);
-
-  imu.gyroYaw    = (0.95 * Pre_gyro) + (0.05 * -imu.gyroRaw[YAW]);
 		
 		imu.AHRS[ROLL] = AHRS->Roll + 0.0f;
 		imu.AHRS[PITCH] = AHRS->Pitch + 0.0f;
@@ -72,7 +75,6 @@ void calculateAngles(TM_AHRSIMU_t* AHRS) {
 	Pre_IMU[ROLL]  = AHRS->Roll;
 	Pre_IMU[PITCH] = AHRS->Pitch;
 	Pre_IMU[YAW]   = AHRS->Yaw;
-	Pre_gyro = imu.gyroYaw;
 	}
 
 void TM_AHRSIMU_Init(TM_AHRSIMU_t* AHRS, float sampleRate, float beta, float inclination) {
@@ -406,6 +408,6 @@ void computeIMU(void)
     /* Call update function */
     /* This function must be called periodically in inteervals set by sample rate on initialization process */
 	TM_AHRSIMU_UpdateIMU(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
-	//TM_AHRSIMU_UpdateAHRS(&AHRSIMU, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW]);
+	//TM_AHRSIMU_UpdateAHRS(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW]);
 #endif
 }

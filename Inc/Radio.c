@@ -187,18 +187,36 @@ void computeRC(void)
                rcDelayCommand = 0; // allow autorepetition
          }
         }
+	    if(RC.rcCommand[AUX1] > 1800){
+	      f.ANGLE_MODE = 1;
+	      f.HORIZON_MODE = 0;
+	      f.ACRO_MODE = 0;
+	    }else if(RC.rcCommand[AUX1] > 1400 && RC.rcCommand[AUX1] < 1600){
+	      f.HORIZON_MODE = 1;
+	      f.ANGLE_MODE = 0;
+	      f.ACRO_MODE = 0;
+	    }else {
+	      f.ACRO_MODE = 1;
+	      f.ANGLE_MODE = 0;
+	      f.HORIZON_MODE = 0;
+	    }
 
- 		RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -20, 20)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
-		RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -20, 20)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
-		RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -100, 100); //0~250 left:0, right:250
-	  RC.rcCommand[THROTTLE] = map(zofs(RC.rcADC[THROTTLE], 1100, 10), 1100, 1900, 0, 1800);//0~250
-	  RC.rcCommand[GEAR] 	   = RC.rcADC[GEAR];
-	  RC.rcCommand[AUX1] 	   = RC.rcADC[AUX1];
+		 if(f.ANGLE_MODE || f.HORIZON_MODE){
+		   RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -30, 30)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
+		   RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -30, 30)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
+		   RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -100, 100); //0~250 left:0, right:250
+		 }else if(f.ACRO_MODE){
+		   RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -90, 90)+ MSP_TRIM[ROLL];
+		   RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -90, 90)+ MSP_TRIM[PITCH];
+		   RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -90, 90);
+		 }
+		 RC.rcCommand[THROTTLE] = map(zofs(RC.rcADC[THROTTLE], 1100, 10), 1100, 1900, 1000, 1800);//0~250
+		 RC.rcCommand[GEAR]     = RC.rcADC[GEAR];
+		 RC.rcCommand[AUX1]     = RC.rcADC[AUX1];
 
-	  if(RC.rcCommand[GEAR] > 1500){
-	    mwArm();
-	  }else{
-	    mwDisarm();
+	  if(RC.rcCommand[GEAR] > 1500 && !f.HEADFREE_MODE){
+	    f.HEADFREE_MODE = 1;
+	  }else if(RC.rcCommand[GEAR] < 1500 && f.HEADFREE_MODE){
+	    f.HEADFREE_MODE = 0;
 	  }
-
 }
