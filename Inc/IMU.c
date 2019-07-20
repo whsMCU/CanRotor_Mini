@@ -407,7 +407,7 @@ void computeIMU(void)
 #ifdef IMU_AHRS
     /* Call update function */
     /* This function must be called periodically in inteervals set by sample rate on initialization process */
-	TM_AHRSIMU_UpdateIMU(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
-	//TM_AHRSIMU_UpdateAHRS(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW]);
+	TM_AHRSIMU_UpdateIMU(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accSmooth[ROLL], imu.accSmooth[PITCH], imu.accSmooth[YAW]);
+	//TM_AHRSIMU_UpdateAHRS(&AHRS, imu.gyroRaw[ROLL], imu.gyroRaw[PITCH], imu.gyroRaw[YAW], imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW], imu.magSmooth[ROLL], imu.magSmooth[PITCH], imu.magSmooth[YAW]);
 #endif
 }

@@ -36,6 +36,6 @@
     #define VBATNOMINAL 42
     #define VBAT_SMOOTH 8              // len of averaging vector for smoothing the VBAT readings; should be power of 2; set to 1 to disable
 
-    #define HEADING_SMOOTH 20
+    #define HEADING_SMOOTH 40
 
 #endif

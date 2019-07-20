@@ -2,7 +2,6 @@
 #define SENSOR_H_
 
 typedef struct {
-  int16_t  accSmooth[3];
   int16_t  gyroData[3];
   int16_t  magADC[3];
   int16_t  rawTemp;
@@ -11,12 +10,14 @@ typedef struct {
 
   int16_t  acctemp[3];
   float  accRaw[3];
+  float  accSmooth[3];
   float  gyroRaw[3];
+  float  magSmooth[3];
   float  magRaw[3];
   float  magYAW;
 	
   float Temp;
-  int32_t acc_cal[3];
+  int32_t accZero[3];
   float gyro_cal[3];
   float mag_cal[3];
 	
@@ -25,7 +26,7 @@ typedef struct {
 
   float compass_x_horizontal;
   float compass_y_horizontal;
-  float actual_compass_heading;
+  int32_t actual_compass_heading;
 	
 } imu_t;
 
@@ -458,7 +459,7 @@ enum M_MODE {
 #define MS5611_CMD_CONV_D2            (0x50)
 #define MS5611_CMD_READ_PROM          (0xA2)
 
-#define BARO_TAB_SIZE_MAX 21
+#define BARO_TAB_SIZE_MAX 48  //21
 
 
 typedef enum
@@ -523,6 +524,7 @@ void MS5611_Init(ms5611_osr_t osr);
 void Baro_Common(void);
 uint8_t Baro_update(void);
 uint8_t getEstimatedAltitude(void);
+bool isBaroCalibrationComplete(void);
 
 uint32_t readRawTemperature(void);
 uint32_t readRawPressure(void);

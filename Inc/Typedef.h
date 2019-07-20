@@ -39,6 +39,7 @@ typedef struct flags_t {
     uint8_t FW_FAILSAFE_RTH_ENABLE;
     uint8_t CLIMBOUT_FW;
     uint8_t CRUISE_MODE;
+    uint8_t mag_reset;
 } flags_t;
 
 enum box {

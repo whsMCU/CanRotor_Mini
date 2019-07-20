@@ -213,9 +213,9 @@ void PrintData(uint8_t command)
 	     break;
 
 	case 2:
-		sprintf(Buf, " magBias_x: (%3.2f), magBias_y: (%3.2f), magBias_z: (%3.2f), flag (%d)\r\n",
-		        magBias[ROLL], magBias[PITCH], magBias[YAW], f.CALIBRATE_MAG);
-			HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+		sprintf(Buf, " magBias_x: (%3.2f), magBias_y: (%3.2f), magBias_z: (%3.2f)\r\n",
+		        imu.accRaw[ROLL], imu.accRaw[PITCH], imu.accRaw[YAW]);
+			HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
 	    break;
 
@@ -242,7 +242,7 @@ void PrintData(uint8_t command)
 //    sprintf(Buf, "Mag:(%5.f)(%5.f)(%5.f), AHRS:(%4.f)(%4.f)(%4.f), RC:(%4.d)(%4.d)(%4.d)(%4.d), (%4.d) (%4.2f), ARMED: (%2.1d), MS5611 : %.2f Pa , %.2f cm\r\n",
 //            imu.magRaw[ROLL], imu.magRaw[PITCH], imu.magRaw[YAW], imu.AHRS[ROLL], imu.AHRS[PITCH], imu.AHRS[YAW], RC.rcCommand[ROLL], RC.rcCommand[PITCH], RC.rcCommand[YAW], RC.rcCommand[THROTTLE], BAT.VBAT_Sense, BAT.VBAT, f.ARMED, ms5611.actual_pressure, ms5611.GroundAltitude);
     //sprintf(Buf,"Hour: %d, minute : %d, second : %d, milliseconds : %d\n", GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds);
-		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 	//HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 		break;
 	case 6:
@@ -268,8 +268,8 @@ void PrintData(uint8_t command)
 		break;
 
 	case 10:
-		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d \r\n ", loopTime, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, (int16_t)alt.EstAlt, f.ARMED);
-		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+		sprintf(Buf, "Data : %d, %d, %d, %d, %d, %d, %d, %d \r\n ", loopTime, ms5611.realTemperature, (uint32_t)ms5611.realPressure, baroPressureSum, ms5611.BaroAlt, (int16_t)alt.EstAlt, f.ARMED, (int16_t)imu.actual_compass_heading);
+		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
 
 		break;
 
@@ -446,23 +446,22 @@ void SerialCom(void) {
 
 	    case MSP_MISC:
       { struct {
-        uint16_t roll, pitch, yaw, throttle, gear, aux1;
-        uint32_t ArmedTime;
-        uint32_t cycleTime;
-        uint8_t error, flag;
-        int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-        int16_t heading;             // variometer in cm/s
-        int16_t mag_heading;
-        uint16_t VBAT;
-        uint16_t Temp;
-        int16_t alt;  //32
-        int16_t acc[3]; //38
-        int16_t gyro[3]; //44
-        int16_t mag[3]; //50
-        uint8_t a,b;
-        int32_t c,d;
-        int16_t motor[4];//68
-
+        uint16_t roll, pitch, yaw, throttle, gear, aux1; //12
+        uint32_t ArmedTime; //16
+        uint32_t cycleTime; //20
+        uint8_t error, flag; //22
+        int16_t angle[2];    //26
+        int16_t heading;     //28
+        int16_t mag_heading; //30
+        int16_t alt;  //38
+        int16_t VBAT;//32
+        int16_t Temp; //34
+        int16_t acc[3]; //44
+        int16_t gyro[3]; //50
+        int16_t mag[3]; //56
+        uint8_t a,b; //58
+        int32_t c,d; //66
+        int16_t motor[4];//74
       } tele;
       tele.roll     = RC.rcCommand[ROLL];
       tele.pitch    = RC.rcCommand[PITCH];
@@ -485,11 +484,11 @@ void SerialCom(void) {
       tele.angle[PITCH] = (int16_t) imu.AHRS[PITCH] * 10;
       tele.heading = (int16_t) imu.AHRS[YAW];
       tele.mag_heading = (int16_t) imu.actual_compass_heading;
-      tele.VBAT = BAT.VBAT;
-      tele.Temp = (imu.Temp*10);
       tele.alt = (int16_t) alt.EstAlt;
+      tele.VBAT = (int16_t) BAT.VBAT;
+      tele.Temp = (int16_t) imu.Temp*10;
       for(uint8_t axis=0; axis<3;axis++){
-        tele.acc[axis]  = (int16_t) map(imu.accADC[axis], -32768, 32768, -1000, 1000);
+        tele.acc[axis]  = (int16_t) imu.accSmooth[axis];//map(imu.accADC[axis], -32768, 32768, -1000, 1000);
         tele.gyro[axis] = (int16_t) imu.gyroRaw[axis];
         tele.mag[axis]  = (int16_t) imu.magRaw[axis];
       }
@@ -501,7 +500,7 @@ void SerialCom(void) {
       tele.motor[1] = motor[1];
       tele.motor[2] = motor[2];
       tele.motor[3] = motor[3];
-      s_struct((uint8_t*)&tele,72);
+      s_struct((uint8_t*)&tele,74);
       break;
      }
 
@@ -591,6 +590,7 @@ void SerialCom(void) {
        RGB_R_OFF;
        cycleTimeMax = 0;
        cycleTimeMin = 65535;
+       f.mag_reset = 1;
         break;
 
 		 case MSP_ACC_CALIBRATION:

@@ -1,8 +1,9 @@
 //#include "Sensor.h"
 #include "Board.h"
-uint16_t calibratingA = 0;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
+uint16_t calibratingA = 512;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
 uint16_t calibratingB = 200;      // baro calibration = get new ground pressure value
 uint16_t calibratingG = 0;
+uint16_t acc_1G = 512;          // this is the 1G measured acceleration.
 
 uint8_t rawADC[12];
 float magCalibration[3] = {0, 0, 0}, magBias[3] = {0, 0, 0};
@@ -19,10 +20,12 @@ imu_t imu;
 LPS_t lps;
 ms5611_t ms5611;
 
+#define acc_lpf_factor 4
+#define mag_lpf_factor 4
 
 #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = X; imu.accADC[PITCH]  = Y; imu.accADC[YAW]  = Z;}
 #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] = X; imu.gyroADC[PITCH] = Y; imu.gyroADC[YAW] = Z;}
-#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[PITCH]  = X; imu.magADC[ROLL]  = Y; imu.magADC[YAW]  = -Z;}
+#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  = Y; imu.magADC[PITCH]  = X; imu.magADC[YAW]  = -Z;}
 //Cell phone compass ref. 340
 //-,+,+ = 83
 //-,-,+ = 278
@@ -33,8 +36,8 @@ ms5611_t ms5611;
 //+,+,- = 97
 //+,+,+ = 97
 // Specify sensor full scale
-uint8_t Gscale = GFS_250DPS;
-uint8_t Ascale = AFS_2G;
+uint8_t Gscale = GFS_2000DPS;  //250G
+uint8_t Ascale = AFS_8G;  //2G
 // Choose either 14-bit or 16-bit magnetometer resolution
 uint8_t Mscale = MFS_16BITS;
 
@@ -327,15 +330,16 @@ void ACC_getADC(void){
 	int16_t z = 0;
 	I2C_ByteRead(MPU9250_ADDRESS_AD0_HIGH, MPU9250_RA_ACCEL_XOUT_H, 1, rawADC, 6);
 	/* Get acceleration */
-	x = ((int16_t)rawADC[0]<<8) | rawADC[1];
-	y = ((int16_t)rawADC[2]<<8) | rawADC[3];
-	z = ((int16_t)rawADC[4]<<8) | rawADC[5];
+	x = (int16_t)((rawADC[0]<<8) | rawADC[1])>>3;
+	y = (int16_t)((rawADC[2]<<8) | rawADC[3])>>3;
+	z = (int16_t)((rawADC[4]<<8) | rawADC[5])>>3;
 	ACC_ORIENTATION( x, y, z);
 	ACC_Common();
 }
 
 void ACC_Common(void){
   uint8_t axis = 0;
+  static float accLPF[3];
   static int32_t a[3];
 
   if(calibratingA>0){
@@ -346,20 +350,24 @@ void ACC_Common(void){
       a[axis] +=imu.accADC[axis];
       // Clear global variables for next reading
       imu.accADC[axis]=0;
-      imu.acc_cal[axis]=0;
+      imu.accZero[axis]=0;
     }
      // Calculate average, shift Z down by acc_1G and store values in EEPROM at end of calibration
   if (calibratingA == 1){
-    imu.acc_cal[ROLL]  = a[ROLL]>>9;
-    imu.acc_cal[PITCH] = a[PITCH]>>9;
-    imu.acc_cal[YAW]   = (a[YAW]>>9)-(int32_t)aRes;
+    imu.accZero[ROLL]  = a[ROLL]>>9;
+    imu.accZero[PITCH] = a[PITCH]>>9;
+    imu.accZero[YAW]   = (a[YAW]>>9)-(int32_t)acc_1G;
     f.CALIBRATE_ACC = 0;
   }
   calibratingA--;
   }
 
   for(axis=0;axis<3;axis++){
-    imu.accRaw[axis] = (float)imu.accADC[axis] * aRes;// - accBias[axis];
+    imu.accRaw[axis] = (float)imu.accADC[axis]-imu.accZero[axis];// * aRes;// - accBias[axis];
+    if (acc_lpf_factor > 0) {
+        accLPF[axis] = accLPF[axis] * (1.0f - (1.0f / acc_lpf_factor)) + imu.accRaw[axis] * (1.0f / acc_lpf_factor);
+        imu.accSmooth[axis] = accLPF[axis];
+    }
   }
 }
 
@@ -384,6 +392,7 @@ void Mag_getADC(void){
 
 void MAG_Common(void){
   uint8_t axis = 0;
+  static float magLPF[3];
   static uint8_t flag = 0;
   static int jj = 0;
   static int32_t mag_bias[3] = {0, 0, 0}, mag_scale[3] = {0, 0, 0};
@@ -423,6 +432,10 @@ void MAG_Common(void){
   for(axis=0;axis<3;axis++)
   {
     imu.magRaw[axis] = (float)imu.magADC[axis] * mRes * magCalibration[axis] - magBias[axis];
+    if (mag_lpf_factor > 0) {
+      magLPF[axis] = magLPF[axis] * (1.0f - (1.0f / mag_lpf_factor)) + imu.magRaw[axis] * (1.0f / mag_lpf_factor);
+        imu.magSmooth[axis] = magLPF[axis];
+    }
   }
 }
 
@@ -430,19 +443,23 @@ void CAL_Heading(void){
   static uint8_t ind = 0;
   static float heading[HEADING_SMOOTH], h_sum;
 
-  imu.compass_x_horizontal = (float)imu.magRaw[ROLL] * cos(imu.AHRS[PITCH] * 0.0174533) + (float)imu.magRaw[PITCH] * sin(imu.AHRS[ROLL] * 0.0174533) * sin(imu.AHRS[PITCH] * 0.0174533) + imu.magRaw[YAW] * sin(imu.AHRS[PITCH] * 0.0174533) * cos(imu.AHRS[ROLL] * 0.0174533);
-  imu.compass_y_horizontal = (float)imu.magRaw[PITCH] * cos(imu.AHRS[ROLL] * 0.0174533) - (float)imu.magRaw[YAW] * sin(imu.AHRS[ROLL] * 0.0174533);
-  imu.actual_compass_heading = (atan2(imu.compass_y_horizontal, imu.compass_x_horizontal)) * (180.0f / M_PI);
-  h_sum += imu.actual_compass_heading;
-  h_sum -= heading[ind];
-  heading[ind++] = imu.actual_compass_heading;
-  ind %= HEADING_SMOOTH;
-  imu.actual_compass_heading = h_sum/HEADING_SMOOTH;
-  if (imu.actual_compass_heading < 0){
-    imu.actual_compass_heading += 360;
-  }else if (imu.actual_compass_heading >= 360){
-	  imu.actual_compass_heading -= 360;
-  }
+  float cosineRoll = cosf(imu.AHRS[ROLL] * 0.0174533f);
+  float sineRoll = sinf(imu.AHRS[ROLL] * 0.0174533f);
+  float cosinePitch = cosf(imu.AHRS[PITCH] * 0.0174533f);
+  float sinePitch = sinf(imu.AHRS[PITCH] * 0.0174533f);
+  float Xh = imu.magSmooth[ROLL] * cosinePitch + imu.magSmooth[PITCH] * sineRoll * sinePitch + imu.magSmooth[YAW] * sinePitch * cosineRoll;
+  float Yh = imu.magSmooth[PITCH] * cosineRoll - imu.magSmooth[YAW] * sineRoll;
+  float hd = (atan2f(Yh, Xh) * 180.0f / M_PI);
+  int32_t head = lrintf(hd);
+  if (head < 0)
+      head += 360;
+  imu.actual_compass_heading = head;
+
+//  h_sum += imu.actual_compass_heading;
+//  h_sum -= heading[ind];
+//  heading[ind++] = imu.actual_compass_heading;
+//  ind %= HEADING_SMOOTH;
+//  imu.actual_compass_heading = h_sum/HEADING_SMOOTH;
 
   att.mag_heading = (int16_t) imu.actual_compass_heading;
 }
@@ -847,12 +864,11 @@ void Baro_Common(void){
   static int baroHistIdx = 0;
 
   uint8_t indexplus1 = (baroHistIdx + 1);
-  if (indexplus1 == BARO_TAB_SIZE_MAX) indexplus1 = 0;
+  if (indexplus1 == 21) indexplus1 = 0;
   baroHistTab[baroHistIdx] = ms5611.realPressure;
   baroPressureSum += baroHistTab[baroHistIdx];
   baroPressureSum -= baroHistTab[indexplus1];
   baroHistIdx = indexplus1;
-  ms5611.avg_realPressure = baroPressureSum/20;
 }
 
 uint8_t Baro_update(void){
@@ -883,7 +899,12 @@ uint8_t Baro_update(void){
 }
 
 uint8_t getEstimatedAltitude(void){
-  static float baroGroundTemperatureScale,logBaroGroundPressureSum;
+  //static float baroGroundTemperatureScale,logBaroGroundPressureSum;
+  static bool altitudeOffsetSet;
+  static int32_t baroAltOffset = 0;
+  int32_t BaroAlt_tmp;
+  static int32_t baroGroundAltitude = 0;
+  static int32_t baroGroundPressure = 0;
   static uint16_t previousT;
   uint16_t currentT = micros();
   uint16_t dTime;
@@ -892,21 +913,49 @@ uint8_t getEstimatedAltitude(void){
   if (dTime < 25000) return 0;
   previousT = currentT;
   if (calibratingB > 0) {
+//    logBaroGroundPressureSum = log(baroPressureSum);
+//    baroGroundTemperatureScale = ((int32_t)ms5611.realTemperature + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
 
-    logBaroGroundPressureSum = log(baroPressureSum);
-    baroGroundTemperatureScale = ((int32_t)ms5611.realTemperature + 27315) * (2 * 29.271267f); // 2 *  is included here => no need for * 2  on BaroAlt in additional LPF
+    baroGroundPressure -= baroGroundPressure / 8;
+    baroGroundPressure += baroPressureSum / (21 - 1);
+    baroGroundAltitude = (1.0f - powf((baroGroundPressure / 8) / 101325.0f, 0.190295f)) * 4433000.0f;
     calibratingB--;
   }
-  //ms5611.altitude_ref_ground = (ms5611.ground_pressure - ms5611.avg_realPressure) * 0.117;
-  ms5611.altitude_ref_ground = (44330.0f * (1.0f - pow((double)ms5611.avg_realPressure / (double)ms5611.ground_pressure, 0.1902949f)));
-  // baroGroundPressureSum is not supposed to be 0 here
-  // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
-  ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
 
-  alt.EstAlt = (alt.EstAlt * 6 + ms5611.BaroAlt ) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
-  if(alt.EstAlt < 0) alt.EstAlt = 0;
+  // calculates height from ground via baro readings
+  // see: https://github.com/diydrones/ardupilot/blob/master/libraries/AP_Baro/AP_Baro.cpp#L140
+  if(isBaroCalibrationComplete()){
+  BaroAlt_tmp = lrintf((1.0f - powf((float)(baroPressureSum / (21 - 1)) / 101325.0f, 0.190295f)) * 4433000.0f); // in cm
+  BaroAlt_tmp -= baroGroundAltitude;
+  ms5611.BaroAlt = lrintf((float)ms5611.BaroAlt * 0.6f + (float)BaroAlt_tmp * (1.0f - 0.6f)); // additional LPF to reduce baro noise
+  alt.EstAlt = ms5611.BaroAlt;
+  }else{
+    alt.EstAlt = 0;
+  }
+
+  if ((f.ARMED|f.mag_reset) && !altitudeOffsetSet) {
+      f.mag_reset = false;
+      baroAltOffset = alt.EstAlt;
+      altitudeOffsetSet = true;
+  } else if (!f.ARMED && altitudeOffsetSet) {
+      altitudeOffsetSet = false;
+  }
+  alt.EstAlt -= baroAltOffset;
+
+//   baroGroundPressureSum is not supposed to be 0 here
+//   see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
+
+//  ms5611.BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
+//  alt.EstAlt = (alt.EstAlt * 6 + ms5611.BaroAlt ) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
+//if(alt.EstAlt < 0) alt.EstAlt = 0;
   return 1;
 }
+
+bool isBaroCalibrationComplete(void)
+{
+    return calibratingB == 0;
+}
+
 uint32_t readRawTemperature(void)
 {
     I2C_Write(MS5611_ADDRESS, MS5611_CMD_CONV_D2 + ms5611.uosr, 1);
@@ -955,7 +1004,7 @@ void MS561101BA_Calculate(void){
   OFF = OFF - ms5611.OFF2;
   SENS = SENS - ms5611.SENS2;
 
-  ms5611.realPressure = (D1 * SENS / 2097152 - OFF) / 32768;
+  ms5611.realPressure = ((int64_t)D1 * SENS / 2097152 - OFF) / 32768;
 }
 
 // Read 16-bit from register (oops MSB, LSB)
