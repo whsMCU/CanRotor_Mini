@@ -6,7 +6,7 @@ Serial.c:101:9:read8	0	static
 Serial.c:106:10:read16	8	static
 Serial.c:113:10:read32	8	static
 Serial.c:173:6:PrintData	96	static
-Serial.c:656:6:SerialSerialize	8	static
+Serial.c:715:6:SerialSerialize	8	static
 Serial.c:80:6:serialize8	8	static
 Serial.c:87:6:serialize16	8	static
 Serial.c:93:6:serialize32	8	static
@@ -16,7 +16,7 @@ Serial.c:135:6:headSerialResponse	16	static
 Serial.c:145:6:headSerialReply	0	static
 Serial.c:150:6:headSerialError	0	static
 Serial.c:162:6:s_struct_partial	16	static
-Serial.c:663:6:UartSendData	24	static
+Serial.c:722:6:UartSendData	24	static
 Serial.c:155:6:tailSerialReply	8	static
 Serial.c:166:6:s_struct	16	static
 Serial.c:375:7:evaluateCommand	112	static

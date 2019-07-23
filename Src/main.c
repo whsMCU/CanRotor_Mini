@@ -116,7 +116,6 @@ int main(void){
   MX_TIM3_Init(); //Radio
   MX_TIM2_Init(); //Radio
   /* USER CODE BEGIN 2 */
-
   LED1_ON;
   LED0_OFF;
   for (int i = 0; i < 10; i++){

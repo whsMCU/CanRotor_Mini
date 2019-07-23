@@ -10,13 +10,16 @@ typedef struct pidc_t {
 	float kp[3];
 	float kp1[3];
 	float kp2[3];
+  float kp_rate[3];
 	
 	float ki[3];
 	float ki1[3];
 	float ki2[3];
+  float ki_rate[3];
 	
 	float kd[3];
 	float kd2[3];
+  float kd_rate[3];
 
 	float i1_limit[3];
 	float i2_limit[3];

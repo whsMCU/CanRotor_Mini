@@ -7,9 +7,6 @@
 //#define IMU_NORMAL
 #define IMU_AHRS
 
-//#define PID_NORMAL
-//#define PID_DUAL
-
 #define HEADFREE
 
 //#define Recive_PID_CHANGE

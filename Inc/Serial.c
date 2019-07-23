@@ -544,19 +544,60 @@ void SerialCom(void) {
 		 case MSP_PID:
      { struct {
         uint16_t ROLL[3];
+        uint16_t outer_ROLL[2];
+        uint16_t inner_ROLL[3];
+        uint16_t ROLL_rate[3];
+
         uint16_t PITCH[3];
+        uint16_t outer_PITCH[2];
+        uint16_t inner_PITCH[3];
+        uint16_t PITCH_rate[3];
+
         uint16_t YAW[3];
+        uint16_t outer_YAW[2];
+        uint16_t inner_YAW[3];
+        uint16_t YAW_rate[3];
       } pid_t;
-        pid_t.ROLL[0]  = (int16_t) (pid.kp[ROLL]  * 10);
-        pid_t.ROLL[1]  = (int16_t) (pid.ki[ROLL]  * 10);
-        pid_t.ROLL[2]  = (int16_t) (pid.kd[ROLL]  * 10);
-        pid_t.PITCH[0] = (int16_t) (pid.kp[PITCH] * 10);
-        pid_t.PITCH[1] = (int16_t) (pid.ki[PITCH] * 10);
-        pid_t.PITCH[2] = (int16_t) (pid.kd[PITCH] * 10);
-        pid_t.YAW[0]   = (int16_t) (pid.kp[YAW]   * 10);
-        pid_t.YAW[1]   = (int16_t) (pid.ki[YAW]   * 10);
-        pid_t.YAW[2]   = (int16_t) (pid.kd[YAW]   * 10);
-        s_struct((uint8_t*)&pid_t,18);
+
+
+          pid_t.ROLL[0]  = (int16_t) (pid.kp[ROLL]  * 10);
+          pid_t.ROLL[1]  = (int16_t) (pid.ki[ROLL]  * 10);
+          pid_t.ROLL[2]  = (int16_t) (pid.kd[ROLL]  * 10);
+          pid_t.PITCH[0] = (int16_t) (pid.kp[PITCH] * 10);
+          pid_t.PITCH[1] = (int16_t) (pid.ki[PITCH] * 10);
+          pid_t.PITCH[2] = (int16_t) (pid.kd[PITCH] * 10);
+          pid_t.YAW[0]   = (int16_t) (pid.kp[YAW]   * 10);
+          pid_t.YAW[1]   = (int16_t) (pid.ki[YAW]   * 10);
+          pid_t.YAW[2]   = (int16_t) (pid.kd[YAW]   * 10);
+
+          pid_t.outer_ROLL[0] = (int16_t) (pid.kp1[ROLL] * 10);
+          pid_t.outer_ROLL[1] = (int16_t) (pid.ki1[ROLL] * 10);
+          pid_t.outer_PITCH[0] = (int16_t) (pid.kp1[PITCH] * 10);
+          pid_t.outer_PITCH[1] = (int16_t) (pid.ki1[PITCH] * 10);
+          pid_t.outer_YAW[0] = (int16_t) (pid.kp1[YAW] * 10);
+          pid_t.outer_YAW[1] = (int16_t) (pid.ki1[YAW] * 10);
+
+          pid_t.inner_ROLL[0] = (int16_t) (pid.kp2[ROLL] * 10);
+          pid_t.inner_ROLL[1] = (int16_t) (pid.ki2[ROLL] * 10);
+          pid_t.inner_ROLL[2] = (int16_t) (pid.kd2[ROLL] * 10);
+          pid_t.inner_PITCH[0] = (int16_t) (pid.kp2[PITCH] * 10);
+          pid_t.inner_PITCH[1] = (int16_t) (pid.ki2[PITCH] * 10);
+          pid_t.inner_PITCH[2] = (int16_t) (pid.kd2[PITCH] * 10);
+          pid_t.inner_YAW[0] = (int16_t) (pid.kp2[YAW] * 10);
+          pid_t.inner_YAW[1] = (int16_t) (pid.ki2[YAW] * 10);
+          pid_t.inner_YAW[2] = (int16_t) (pid.kd2[YAW] * 10);
+
+          pid_t.ROLL_rate[0]  = (int16_t) (pid.kp_rate[ROLL]  * 10);
+          pid_t.ROLL_rate[1]  = (int16_t) (pid.ki_rate[ROLL]  * 10);
+          pid_t.ROLL_rate[2]  = (int16_t) (pid.kd_rate[ROLL]  * 10);
+          pid_t.PITCH_rate[0] = (int16_t) (pid.kp_rate[PITCH] * 10);
+          pid_t.PITCH_rate[1] = (int16_t) (pid.ki_rate[PITCH] * 10);
+          pid_t.PITCH_rate[2] = (int16_t) (pid.kd_rate[PITCH] * 10);
+          pid_t.YAW_rate[0]   = (int16_t) (pid.kp_rate[YAW]   * 10);
+          pid_t.YAW_rate[1]   = (int16_t) (pid.ki_rate[YAW]   * 10);
+          pid_t.YAW_rate[2]   = (int16_t) (pid.kd_rate[YAW]   * 10);
+
+        s_struct((uint8_t*)&pid_t,66);
 
        break;			
      }
@@ -582,6 +623,24 @@ void SerialCom(void) {
 				 pid.ki[i] /= 10;
 				 pid.kd[i] = (float) read16();
 				 pid.kd[i] /= 10;
+
+				 pid.kp1[i] = (float) read16();
+	       pid.kp1[i] /= 10;
+         pid.ki1[i] = (float) read16();
+         pid.ki1[i] /= 10;
+         pid.kp2[i] = (float) read16();
+         pid.kp2[i] /= 10;
+         pid.ki2[i] = (float) read16();
+         pid.ki2[i] /= 10;
+         pid.kd2[i] = (float) read16();
+         pid.kd2[i] /= 10;
+
+         pid.kp_rate[i] = (float) read16();
+         pid.kp_rate[i] /= 10;
+         pid.ki_rate[i] = (float) read16();
+         pid.ki_rate[i] /= 10;
+         pid.kd_rate[i] = (float) read16();
+         pid.kd_rate[i] /= 10;
 				}
        break;
 

@@ -172,7 +172,7 @@ void computeRC(void)
 			 if(f.ARMED == 0 && (rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE))
 			 {
 			   RGB_B_TOGGLE;
-			 }else if(f.ARMED == 0 && (rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE))
+			 }else if(f.ARMED == 1 && (rcSticks == THR_LO + YAW_HI + PIT_CE + ROL_CE))
 			 {
 			   RGB_G_TOGGLE;
 			 }else if(f.ARMED == 0 && (rcSticks == THR_LO + YAW_HI + PIT_HI + ROL_HI))
@@ -204,7 +204,7 @@ void computeRC(void)
 		 if(f.ANGLE_MODE || f.HORIZON_MODE){
 		   RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -30, 30)+ MSP_TRIM[ROLL]; //0~250 left:0, right:250
 		   RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -30, 30)+ MSP_TRIM[PITCH]; //0~250 rear:0, fornt:250
-		   RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1500, 10), 1100, 1900, -100, 100); //0~250 left:0, right:250
+		   RC.rcCommand[YAW]      = -map(zofs(RC.rcADC[YAW], 1530, 10), 1130, 1930, -100, 100); //0~250 left:0, right:250
 		 }else if(f.ACRO_MODE){
 		   RC.rcCommand[ROLL]     = map(zofs(RC.rcADC[ROLL], 1500, 10), 1100, 1900, -90, 90)+ MSP_TRIM[ROLL];
 		   RC.rcCommand[PITCH]    = -map(zofs(RC.rcADC[PITCH], 1500, 10), 1100, 1900, -90, 90)+ MSP_TRIM[PITCH];
