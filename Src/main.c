@@ -178,7 +178,7 @@ int main(void){
 //   display();
 
    clearDisplay();
-//   OLed_printf(0, 0, "유진아 사랑해~!");
+//   OLed_printf(0, 0, "캔로터_FC");
 //   OLed_printf(0, 16, "%d, %f, %d", 12, 3.14f, 7654);
 //   display();
  //  drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);

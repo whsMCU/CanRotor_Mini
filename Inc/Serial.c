@@ -692,16 +692,26 @@ void SerialCom(void) {
 	    case TELEMERY_PID_SAVE:
 	      RGB_B_TOGGLE;
 	      for(int i = 0; i < 3; i++){
-	        writeFloat( 0+(4*i), pid.kp[i]);
-	        writeFloat(12+(4*i), pid.ki[i]);
-	        writeFloat(24+(4*i), pid.kd[i]);
+	        writeFloat(  0+(4*i), pid.kp[i]);
+	        writeFloat( 12+(4*i), pid.ki[i]);
+	        writeFloat( 24+(4*i), pid.kd[i]);
+
+          writeFloat( 36+(4*i), pid.kp1[i]);
+          writeFloat( 48+(4*i), pid.ki1[i]);
+          writeFloat( 60+(4*i), pid.kp2[i]);
+          writeFloat( 72+(4*i), pid.ki2[i]);
+          writeFloat( 84+(4*i), pid.kd2[i]);
+
+          writeFloat( 96+(4*i), pid.kp_rate[i]);
+          writeFloat(108+(4*i), pid.ki_rate[i]);
+          writeFloat(120+(4*i), pid.kd_rate[i]);
 	      }
-	      writeFloat(36, magBias[0]);
-	      writeFloat(40, magBias[1]);
-	      writeFloat(44, magBias[2]);
-	      writeFloat(48, magScale[0]);
-	      writeFloat(52, magScale[1]);
-	      writeFloat(56, magScale[2]);
+	      writeFloat(132, magBias[0]);
+	      writeFloat(136, magBias[1]);
+	      writeFloat(140, magBias[2]);
+	      writeFloat(144, magScale[0]);
+	      writeFloat(148, magScale[1]);
+	      writeFloat(152, magScale[2]);
 	     break;
 
 		 default:

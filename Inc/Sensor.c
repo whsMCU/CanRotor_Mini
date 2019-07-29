@@ -808,12 +808,12 @@ void magcalMPU9250(float * dest1, float * dest2){
  sprintf(Buf, "gyro calibration start wait 5 second.!\r\n");
  HAL_UART_Transmit(&huart1, (uint8_t*)Buf, strlen(Buf), 1000);
 
- writeFloat(36, dest1[0]);
- writeFloat(40, dest1[1]);
- writeFloat(44, dest1[2]);
- writeFloat(48, dest2[0]);
- writeFloat(52, dest2[1]);
- writeFloat(56, dest2[2]);
+ writeFloat(132, dest1[0]);
+ writeFloat(136, dest1[1]);
+ writeFloat(140, dest1[2]);
+ writeFloat(144, dest2[0]);
+ writeFloat(148, dest2[1]);
+ writeFloat(152, dest2[2]);
 
  HAL_Delay(4000);
 

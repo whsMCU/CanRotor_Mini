@@ -129,13 +129,24 @@ void EEPROM_Init()
      pid.kp[i] = readFloat( 0 + (4*i));
      pid.ki[i] = readFloat(12 + (4*i));
      pid.kd[i] = readFloat(24 + (4*i));
+
+     pid.kp1[i] = readFloat(36 + (4*i));
+     pid.ki1[i] = readFloat(48 + (4*i));
+     pid.kp2[i] = readFloat(60 + (4*i));
+     pid.ki2[i] = readFloat(72 + (4*i));
+     pid.kd2[i] = readFloat(84 + (4*i));
+
+     pid.kp_rate[i] = readFloat(96 + (4*i));
+     pid.ki_rate[i] = readFloat(108 + (4*i));
+     pid.kd_rate[i] = readFloat(120 + (4*i));
+
    }
-   magBias[0] = readFloat(36);
-   magBias[1] = readFloat(40);
-   magBias[2] = readFloat(44);
-   magScale[0] = readFloat(48);
-   magScale[1] = readFloat(52);
-   magScale[2] = readFloat(56);
+   magBias[0] = readFloat(132);
+   magBias[1] = readFloat(136);
+   magBias[2] = readFloat(140);
+   magScale[0] = readFloat(144);
+   magScale[1] = readFloat(148);
+   magScale[2] = readFloat(152);
 }
 
 uint8_t EEPROM_read(uint32_t dataAddress)
