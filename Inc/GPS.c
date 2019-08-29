@@ -65,9 +65,7 @@ bool GPS_newFrame(uint8_t c) {
       uint8_t checksum = hex_c(string[0]);
       checksum <<= 4;
       checksum += hex_c(string[1]);
-      if (checksum == parity){
-        frameOK = 1;
-      }
+      if (checksum == parity) frameOK = 1;
     }
     checksum_param=0;
   } else {
@@ -129,9 +127,9 @@ uint32_t GPS_coord_to_degrees(char* s) {
 }
 
 // helper functions
-uint32_t grab_fields(char* src, uint8_t mult) {  // convert string to uint16
+uint16_t grab_fields(char* src, uint8_t mult) {  // convert string to uint16
   uint8_t i;
-  uint32_t tmp = 0;
+  uint16_t tmp = 0;
 
   for(i=0; src[i]!=0; i++) {
     if(src[i] == '.') {

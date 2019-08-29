@@ -212,7 +212,7 @@ int main(void){
       case 2:
         taskOrder++;
         #ifdef GPS_Recive
-          if (GPS_Compute() != 0) break;
+          //if (GPS_Compute() != 0) break;
             break;
         #endif
       case 3:  //15us
@@ -237,6 +237,7 @@ int main(void){
    mixTable();
    PwmWriteMotor();
 
+   PrintData(33);
    //PrintData(3);   //GPS Data
    //PrintData(10);  //Baro
    //PrintData(2);

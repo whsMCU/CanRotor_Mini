@@ -12,6 +12,7 @@ static uint8_t CURRENTPORT=0;
 volatile unsigned char command=0;
 volatile unsigned char m = 0;
 int MSP_TRIM[3]={0, 0, 0};
+uint8_t checksum;
 
 uint8_t Debug_TC=0;
 
@@ -60,7 +61,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart->Instance == USART2) //current USART
 		{
 			write_Q(&Q_buffer[UART2], rx2_buffer[0]);
-			//printf("c %d",rx2_buffer[0]);
+			 //printf("c %d",rx2_buffer[0]);
 			//HAL_UART_Transmit_IT(&huart1, (uint8_t*)rx2_buffer, 100);
 			//TX_CHR(rx2_buffer[0]);
 		}
@@ -77,6 +78,28 @@ void TX2_CHR(char ch){
 }
 
 ///////////////////////////////////////////////////
+
+void serialize(uint8_t a)
+{
+    TX_CHR(a);
+    checksum ^= a;
+}
+
+void tailSerial(void)
+{
+    serialize(checksum);
+}
+
+void headSeri(uint8_t err, uint8_t s, uint8_t cmdMSP)
+{
+    serialize('$');
+    serialize('M');
+    serialize(err ? '!' : '>');
+    checksum = 0;               // start calculating a new checksum
+    serialize(s);
+    serialize(cmdMSP);
+}
+
 void serialize8(uint8_t a)
 {
   SerialSerialize(CURRENTPORT,a);
@@ -173,7 +196,7 @@ void s_struct(uint8_t *cb,uint8_t siz) {
 void PrintData(uint8_t command)
 {
   Debug_TC++;
-  if(Debug_TC >= 12){ //12
+  if(Debug_TC >= 200){ //12
     Debug_TC = 0;
     LED1_TOGGLE;  //GREEN
 #ifdef SSD1306
@@ -220,12 +243,12 @@ void PrintData(uint8_t command)
 	    break;
 
 	case 3:
-	 // sprintf(Buf, "latDeg : %f, lat : %c, lonDeg : %f, lon : %c, fixQ: %d, satel : %d, altitude : %.2fM, geohi : %.2fM \n",
-	 //         GPS.latitudeDegrees, GPS.lat, GPS.longitudeDegrees, GPS.lon, GPS.fixquality, GPS.satellites, GPS.altitude, GPS.geoidheight);
-	  sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, update : %d\n",
-	          GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.GPS_update);
+	  sprintf(Buf, "latDeg : %d, lonDeg : %d, satel : %d, altitude : %.2dM\r\n",
+	          GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.satellites, GPS.altitude);
+//	  sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, update : %d\n",
+//	          GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.GPS_update);
     //sprintf(Buf, "latDeg : %f, lonDeg : %f \r\n", GPS.latitudeDegrees, GPS.longitudeDegrees);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*)Buf, strlen(Buf));
+		HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
 
 	case 4:
@@ -294,8 +317,15 @@ void PrintData(uint8_t command)
 		sprintf(Buf,"R/P/Y: %f %f %f\r\n",AHRS.Roll, AHRS.Pitch, AHRS.Yaw);
 	     HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
 		break;
-	 }
-  }
+  case 33:
+    headSeri(0, 2, MSP_PID);
+    serialize(5);
+    serialize(10);
+    serialize(50);
+    tailSerial();
+      break;
+	}
+ }
 }
 
 void SerialCom(void) {
@@ -351,9 +381,19 @@ void SerialCom(void) {
       currentPortState->c_state = IDLE;
     }
 #ifdef GPS_Recive
-    if(i == 0){
+    if(i == UART2){
       static uint32_t GPS_last_frame_seen; //Last gps frame seen at this time, used to detect stalled gps communication
       if (GPS_newFrame(c)){
+
+//        sprintf(Buf, "latDeg : %d, lonDeg : %d, satel : %d, altitude : %.2dM\r\n",
+//                GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.satellites, GPS.altitude);
+//     //   sprintf(Buf, "Y : %2d, M : %2d, D : %2d, H: %2d, min : %2d, sec : %2d, mil : %3d, speed : %.2f, update : %d\n",
+//     //           GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds, GPS.milliseconds, GPS.speed, GPS.GPS_update);
+//        //sprintf(Buf, "latDeg : %f, lonDeg : %f \r\n", GPS.latitudeDegrees, GPS.longitudeDegrees);
+//        HAL_UART_Transmit_DMA(&huart1, (uint8_t*)Buf, strlen(Buf));
+        RGB_R_TOGGLE;
+
+
         //We had a valid GPS data frame, so signal task scheduler to switch to compute
         if (GPS.GPS_update == 1) GPS.GPS_update = 0; else GPS.GPS_update = 1; //Blink GPS update
         GPS_last_frame_seen = timeMax;
@@ -417,18 +457,18 @@ void SerialCom(void) {
 
 	    case MSP_STATUS:
 	    	{ struct {
-          uint32_t ArmedTime;
-	        uint32_t cycleTime;
-	        uint8_t error, flag;
-	    	} st;
-	    	    st.ArmedTime    = armedTime;
-	      	  st.cycleTime    = loopTime;
-	      	  st.error        = Error.error;
-	      	  if(f.ARMED) tmp |= 1<<BOXARM;
-            if(f.HEADFREE_MODE) tmp |= 1<<BOXHEADFREE;
-	      	  st.flag         = tmp;
-	      	  s_struct((uint8_t*)&st,10);
-	      	  break;
+	            uint32_t ArmedTime;
+	            uint32_t cycleTime;
+	            uint8_t error, flag;
+	          } st;
+	              st.ArmedTime    = armedTime;
+	              st.cycleTime    = loopTime;
+	              st.error        = Error.error;
+	              if(f.ARMED) tmp |= 1<<BOXARM;
+	              if(f.HEADFREE_MODE) tmp |= 1<<BOXHEADFREE;
+	              st.flag         = tmp;
+	              s_struct((uint8_t*)&st,10);
+	          break;
 	    	}
 
 	    case MSP_ATTITUDE:
@@ -750,6 +790,15 @@ void UartSendData(uint8_t port) {
       serialTailTX[port] = t;
       HAL_UART_Transmit_IT(&huart2, serialBufTx_1, serialHead_1);
       serialHead_1 = 0;
+      break;
+    default:
+      while (serialHeadTX[0] != t) {
+        if (++t >= TX_BUFFER_SIZE) t = 0;
+        serialBufTx_0[serialHead_0++] = serialBufferTX[t][0];
+      }
+      serialTailTX[0] = t;
+      HAL_UART_Transmit_IT(&huart1, serialBufTx_0, serialHead_0);
+      serialHead_0 = 0;
       break;
   }
 }

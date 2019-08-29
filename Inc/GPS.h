@@ -49,7 +49,7 @@ void gps_Init(void);
 //Function prototypes for GPS frame parsing
 bool GPS_newFrame(uint8_t c);
 uint32_t GPS_coord_to_degrees(char* s);
-uint32_t grab_fields(char* src, uint8_t mult);
+uint16_t grab_fields(char* src, uint8_t mult);
 uint8_t hex_c(uint8_t n);
 
 uint8_t parseHex(char c);
